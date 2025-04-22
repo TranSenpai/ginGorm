@@ -46,7 +46,6 @@ func (rc RoomController) CreateRoom(c *gin.Context) {
 }
 
 func (rc RoomController) UpdateRoom(c *gin.Context) {
-	id := c.Param("id")
 	var room model.Room
 	serviceRoom := service.GetRoomService()
 
@@ -64,7 +63,7 @@ func (rc RoomController) UpdateRoom(c *gin.Context) {
 		return
 	}
 
-	err = serviceRoom.UpdateRoom(id, &room)
+	err = serviceRoom.UpdateRoom(room.ID, &room)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Could not update room"})
 		return
@@ -87,7 +86,7 @@ func (rc RoomController) Delete(c *gin.Context) {
 	serviceRoom := service.GetRoomService()
 
 	role, err := serviceRoom.Search(id)
-	if err.Error() == "not found" {
+	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Role not found"})
 		return
 	}
@@ -114,7 +113,7 @@ func (rc RoomController) Search(c *gin.Context) {
 	// This type allows you to easily define and use dynamic
 	// JSON-like structures within your Gin applications.
 
-	if err.Error() == "not found" {
+	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Room not found"})
 		return
 	}
@@ -131,7 +130,7 @@ func (rc RoomController) SearchAll(c *gin.Context) {
 
 	rooms, err := serviceRoom.SearchAll()
 
-	if err.Error() == "dont have any room in table" {
+	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Empty room table"})
 		return
 	}

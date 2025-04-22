@@ -11,7 +11,6 @@ import (
 type ContractController struct{}
 
 func (cc ContractController) CreateContract(c *gin.Context) {
-	id := c.Param("id")
 	serviceContract := service.GetContractService()
 	var contract model.Contract
 
@@ -21,7 +20,7 @@ func (cc ContractController) CreateContract(c *gin.Context) {
 		return
 	}
 
-	_, err = serviceContract.Search(id)
+	_, err = serviceContract.Search(contract.ID)
 	if err == nil {
 		c.JSON(http.StatusBadGateway, gin.H{"message": "This contract has already exist"})
 		return
@@ -33,7 +32,7 @@ func (cc ContractController) CreateContract(c *gin.Context) {
 		return
 	}
 
-	data, err := serviceContract.Search(id)
+	data, err := serviceContract.Search(contract.ID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Could not retrieve created contract"})
 		return
@@ -45,7 +44,6 @@ func (cc ContractController) CreateContract(c *gin.Context) {
 }
 
 func (cc ContractController) UpdateContract(c *gin.Context) {
-	id := c.Param("id")
 	var contract model.Contract
 	serviceContract := service.GetContractService()
 
@@ -63,7 +61,7 @@ func (cc ContractController) UpdateContract(c *gin.Context) {
 		return
 	}
 
-	err = serviceContract.UpdateContract(id, &contract)
+	err = serviceContract.UpdateContract(contract.ID, &contract)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Could not update contract"})
 		return
@@ -86,7 +84,7 @@ func (cc ContractController) Delete(c *gin.Context) {
 	serviceContract := service.GetContractService()
 
 	role, err := serviceContract.Search(id)
-	if err.Error() == "not found" {
+	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Role not found"})
 		return
 	}
@@ -113,7 +111,7 @@ func (cc ContractController) Search(c *gin.Context) {
 	// This type allows you to easily define and use dynamic
 	// JSON-like structures within your Gin applications.
 
-	if err.Error() == "not found" {
+	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Contract not found"})
 		return
 	}
