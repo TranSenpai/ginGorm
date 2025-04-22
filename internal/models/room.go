@@ -6,9 +6,9 @@ import (
 
 type Room struct {
 	ID                string         `gorm:"type:char(5);primaryKey"` // ID sẽ có cấu trúc 1-2-2 : Building-Floor-RoomID
-	RoomNumber        uint16         `gorm:"type:smallint unsigned"`
-	Building          string         `gorm:"type:char(1)"`
-	Floor             uint8          `gorm:"type:tinyint"`
+	RoomNumber        uint16         `gorm:"type:smallint unsigned; index"`
+	Building          string         `gorm:"type:char(1); index"`
+	Floor             uint8          `gorm:"type:tinyint; index"`
 	Capacity          uint8          `gorm:"type:tinyint"`
 	CurrentOccupants  uint8          `gorm:"type:tinyint; "` //check:current_occupants <= capacity chậm db, check bằng code
 	HasAirconditioner bool           `gorm:"type:bool"`

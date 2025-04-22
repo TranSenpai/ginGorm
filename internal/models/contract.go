@@ -10,11 +10,11 @@ import (
 
 type Contract struct {
 	ID          string    `gorm:"primaryKey;type:char(12)"`
-	StudentCode string    `gorm:"type:char(10);"`
-	FullName    string    `gorm:"type:varchar(100)"`
-	Email       string    `gorm:"type:varchar(100)"`
+	StudentCode string    `gorm:"type:char(10); index"`
+	FullName    string    `gorm:"type:varchar(100); index"`
+	Email       string    `gorm:"type:varchar(100); index"`
 	Sign        string    `gorm:"type:varchar(100); not null"` // Vì bcrypt trả về chuỗi 60 ký tự
-	Phone       string    `gorm:"type:char(10);"`
+	Phone       string    `gorm:"type:char(10); index"`
 	Gender      string    `gorm:"type:enum('male', 'female', 'other'); default:'male'"` // thường tạo ngoài, ít tạo trong db, enum thường là số
 	DOB         time.Time `gorm:"type:date"`
 	Address     string    `gorm:"type:text"`
