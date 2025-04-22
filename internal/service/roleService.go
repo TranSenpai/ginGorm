@@ -1,7 +1,6 @@
 package service
 
 import (
-	"errors"
 	model "main/internal/models"
 	repo "main/internal/repo"
 )
@@ -24,7 +23,7 @@ func (r roleService) CreateRole(role *model.Role) error {
 
 	err := roleRepo.RegisterRole(role)
 	if err != nil {
-		return errors.New("can not create new role")
+		return err
 	}
 
 	return nil
@@ -35,7 +34,7 @@ func (r roleService) DeleteRole(id string) error {
 
 	err := roleRepo.DeleteRole(id)
 	if err != nil {
-		return errors.New("can not create new role")
+		return err
 	}
 
 	return nil
@@ -46,7 +45,7 @@ func (r roleService) UpdateRole(id string, role *model.Role) error {
 
 	err := roleRepo.UpdateRole(id, role)
 	if err != nil {
-		return errors.New("can not update")
+		return err
 	}
 
 	return nil
@@ -67,7 +66,7 @@ func (r roleService) SearchAll() ([]model.Role, error) {
 
 	role, err := roleRepo.SearchAll()
 	if err != nil {
-		return nil, errors.New("can not search")
+		return nil, err
 	}
 	return role, nil
 }

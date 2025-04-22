@@ -70,7 +70,7 @@ func (rl roleRepo) DeleteRole(id string) error {
 		result := tx.Model(&model.Role{}).Where("id = ?", id).Delete(&model.Role{})
 
 		if result.Error != nil {
-			return errors.New("can not delete role")
+			return result.Error
 		}
 
 		return nil

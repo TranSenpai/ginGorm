@@ -97,7 +97,7 @@ func (rc RoleController) Delete(c *gin.Context) {
 	serviceRole := service.GetRoleService()
 
 	role, err := serviceRole.Search(id)
-	if err.Error() == "not found" {
+	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Role not found"})
 		return
 	}
@@ -138,7 +138,7 @@ func (rc RoleController) SearchAll(c *gin.Context) {
 	serviceRole := service.GetRoleService()
 	roles, err := serviceRole.SearchAll()
 
-	if err.Error() == "dont have any role in table" {
+	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Empty role table"})
 		return
 	}

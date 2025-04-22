@@ -1,7 +1,6 @@
 package service
 
 import (
-	"errors"
 	model "main/internal/models"
 	repo "main/internal/repo"
 )
@@ -25,7 +24,7 @@ func (r roomService) CreateRoom(room *model.Room) error {
 
 	err := roomRepo.RegisterRoom(room)
 	if err != nil {
-		return errors.New("can not create new room")
+		return err
 	}
 
 	return nil
@@ -36,7 +35,7 @@ func (r roomService) DeleteRoom(id string) error {
 
 	err := roomRepo.DeleteRoom(id)
 	if err != nil {
-		return errors.New("can not create new room")
+		return err
 	}
 
 	return nil
@@ -47,7 +46,7 @@ func (r roomService) UpdateRoom(id string, room *model.Room) error {
 
 	err := roomRepo.UpdateRoom(id, room)
 	if err != nil {
-		return errors.New("can not update")
+		return err
 	}
 
 	return nil
@@ -58,7 +57,7 @@ func (r roomService) Search(id string) (model.Room, error) {
 
 	room, err := roomRepo.Search(id)
 	if err != nil {
-		return model.Room{}, errors.New("can not search")
+		return model.Room{}, err
 	}
 	return room, nil
 }
@@ -68,7 +67,7 @@ func (r roomService) SearchAll() ([]model.Room, error) {
 
 	room, err := roomRepo.SearchAll()
 	if err != nil {
-		return nil, errors.New("can not search")
+		return nil, err
 	}
 	return room, nil
 }

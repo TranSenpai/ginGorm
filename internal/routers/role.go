@@ -9,9 +9,9 @@ import (
 func RegisterRoleRoute(server *gin.RouterGroup) {
 	api := server.Group("/role")
 	roleController := controller.RoleController{}
-	api.POST("/role", roleController.CreateRole)
+	api.POST("", roleController.CreateRole)
 	api.DELETE("/:id", roleController.Delete)
 	api.PUT("/:id", roleController.UpdateRole)
 	api.GET("/:id", roleController.Search)
-	api.GET("/roles", roleController.SearchAll)
+	api.GET("/all", roleController.SearchAll)
 }
