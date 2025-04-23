@@ -22,7 +22,7 @@ type Contract struct {
 	IsActive    bool      `gorm:"type:bool"`
 	RegistryAt  time.Time `gorm:"type:timestamp; autoCreateTime"`
 	LoginAt     time.Time `gorm:"type:timestamp; autoUpdateTime"`
-	// RoomID               string    `gorm:"type:char(5)"`
+	RoomID      string    `gorm:"type:char(5)"`
 	// Room                 Room      `gorm:"foreignKey:RoomID; references:ID"` // belong to 1 Room
 	NotificationChannels string `gorm:"type:set('email','sms','zalo')"` // Như enum nhưng cho phép bỏ nhiều giá trị trong set
 	// autoUpdateTime là directive do GORM xử lý ở tầng ORM,
