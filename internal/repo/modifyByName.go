@@ -20,11 +20,11 @@ func (m modifyContractByName) CreateContract(ctx context.Context, createContract
 	return RunTransaction(ctx, m.db, createContractTx{Contract: createContract})
 }
 
-func (m modifyContractByName) UpdateContract(ctx context.Context, updateContract *entity.Contract) error {
+func (m modifyContractByName) UpdateContract(ctx context.Context, studentCode string, updateContract *entity.Contract) error {
 	if err := CheckIDTransaction(ctx); err != nil {
 		return err
 	}
-	return RunTransaction(ctx, m.db, updateContractTx{Contract: updateContract})
+	return RunTransaction(ctx, m.db, updateContractTx{Contract: updateContract, StudentCode: studentCode})
 }
 
 func (m modifyContractByName) DeleteContract(ctx context.Context, fullName string) error {

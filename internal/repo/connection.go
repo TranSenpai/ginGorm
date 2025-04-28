@@ -2,9 +2,11 @@ package repo
 
 import (
 	"fmt"
+	"log"
 	"main/internal/entity"
 	"os"
 
+	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -53,6 +55,10 @@ func init() {
 }
 
 func GetConnection() (*gorm.DB, error) {
+	if err := godotenv.Load(); err != nil {
+		log.Println("Warning: Cannot load .env file, fallback to OS environment")
+	}
+
 	username := os.Getenv("ROOT_USERNAME")
 	password := os.Getenv("ROOT_PASSWORD")
 	host := os.Getenv("DB_HOST")
@@ -60,10 +66,9 @@ func GetConnection() (*gorm.DB, error) {
 	dbname := os.Getenv("DB_NAME")
 
 	if username == "" || password == "" || host == "" || port == "" || dbname == "" {
-		return nil, fmt.Errorf("missing database configuration in environment")
+		return nil, fmt.Errorf("missing database configuration")
 	}
 
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", username, password, host, port, dbname)
-
 	return gorm.Open(mysql.Open(dsn), &gorm.Config{})
 }

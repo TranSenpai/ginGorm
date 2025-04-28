@@ -21,12 +21,12 @@ func (cr contractRepo) CreateContract(ctx context.Context, createContract *entit
 	return RunTransaction(ctx, cr.db, createContractTx{Contract: createContract})
 }
 
-func (cr contractRepo) UpdateContract(ctx context.Context, updateContract *entity.Contract) error {
+func (cr contractRepo) UpdateContract(ctx context.Context, studentCode string, updateContract *entity.Contract) error {
 	err := CheckIDTransaction(ctx)
 	if err != nil {
 		return err
 	}
-	return RunTransaction(ctx, cr.db, updateContractTx{Contract: updateContract})
+	return RunTransaction(ctx, cr.db, updateContractTx{Contract: updateContract, StudentCode: studentCode})
 }
 
 func (cr contractRepo) DeleteContract(ctx context.Context, studentCode string) error {
@@ -42,9 +42,9 @@ func (cr contractRepo) Search(ctx context.Context, studentCode string) (entity.C
 	err := cr.db.WithContext(ctx).Where("student_code = ?", studentCode).First(&contract).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return contract, errorx.New(errorx.StatusNotFound, "Contract not found", err)
+			return contract, errorx.WrapError(err, errorx.StatusNotFound, "Contract not found")
 		}
-		return contract, errorx.New(errorx.StatusInternalServerError, "Server error while searching contract", err)
+		return contract, errorx.WrapError(err, errorx.StatusInternalServerError, "Server error while searching contract")
 	}
 	return contract, nil
 }
@@ -52,8 +52,5 @@ func (cr contractRepo) Search(ctx context.Context, studentCode string) (entity.C
 func (cr contractRepo) SearchAll() ([]entity.Contract, error) {
 	var contracts []entity.Contract
 	err := cr.db.Find(&contracts).Error
-	if err != nil {
-		return nil, errorx.New(errorx.StatusInternalServerError, "Server error while fetching all contracts", err)
-	}
-	return contracts, nil
+	return contracts, errorx.WrapError(err, errorx.StatusInternalServerError, "Server error while searching all contracts")
 }

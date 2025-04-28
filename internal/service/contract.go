@@ -48,61 +48,36 @@ func toEntityContract(m *model.Contract) (*entity.Contract, error) {
 
 func (c contractService) CreateContract(ctx context.Context, m *model.Contract) error {
 	contractRepo := repo.GetInstanceContract()
-
-	builder := NewContractBuilder(ctx, m)
-	// MapStudentInfo().
-	// MapContactInfo().
-	// MapRoomInfo().
-	// MapAvatar()
-	builder.MapStudentInfo()
-	if builder.buildError != nil {
-		return builder.buildError
+	buildContract := NewContractBuilder(ctx, m)
+	buildContract = buildContract.MapStudentInfo().MapContactInfo().MapRoomInfo().MapAvatar()
+	if buildContract.buildError != nil {
+		return buildContract.buildError
 	}
+	ctx = context.WithValue(ctx, "id", buildContract.entity.StudentCode)
 
-	builder.ValidateUniqueness(contractRepo)
-	if builder.buildError != nil {
-		return builder.buildError
-	}
-
-	entityContract, err := builder.GetContract()
-	if err != nil {
-		return err
-	}
-
-	ctx = context.WithValue(ctx, "id", entityContract.StudentCode)
-
-	return contractRepo.CreateContract(ctx, entityContract)
+	return contractRepo.CreateContract(ctx, buildContract.entity)
 }
 
 func (c contractService) UpdateContract(ctx context.Context, studentCode string, m *model.Contract) error {
 	contractRepo := repo.GetInstanceContract()
-
-	_, err := contractRepo.Search(ctx, studentCode)
-	if err != nil {
-		if myerr, ok := err.(errorx.MyErr); ok {
-			return errorx.New(myerr.Status, "Cannot update non-existing contract", myerr.Err)
-		}
-		return errorx.New(errorx.StatusInternalServerError, "Failed to search contract", err)
-	}
-
-	entityContract, err := toEntityContract(m)
-	if err != nil {
+	if _, err := contractRepo.Search(ctx, studentCode); err != nil {
 		return err
 	}
 
+	buildContract := NewContractBuilder(ctx, m)
+	buildContract = buildContract.MapStudentInfo().MapContactInfo().MapRoomInfo().MapAvatar()
+	if buildContract.buildError != nil {
+		return buildContract.buildError
+	}
 	ctx = context.WithValue(ctx, "id", studentCode)
-	return contractRepo.UpdateContract(ctx, entityContract)
+
+	return contractRepo.UpdateContract(ctx, studentCode, buildContract.entity)
 }
 
 func (c contractService) DeleteContract(ctx context.Context, studentCode string) error {
 	contractRepo := repo.GetInstanceContract()
-
-	_, err := contractRepo.Search(ctx, studentCode)
-	if err != nil {
-		if myerr, ok := err.(errorx.MyErr); ok {
-			return errorx.New(myerr.Status, "Cannot delete non-existing contract", myerr.Err)
-		}
-		return errorx.New(errorx.StatusInternalServerError, "Failed to search contract", err)
+	if _, err := contractRepo.Search(ctx, studentCode); err != nil {
+		return err
 	}
 
 	ctx = context.WithValue(ctx, "id", studentCode)

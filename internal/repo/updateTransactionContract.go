@@ -8,13 +8,16 @@ import (
 )
 
 type updateContractTx struct {
-	Contract *entity.Contract
+	Contract    *entity.Contract
+	StudentCode string
 }
 
 func (u updateContractTx) Execute(db *gorm.DB) error {
-	err := db.Model(&entity.Contract{}).Updates(&u.Contract).Error
-	if err != nil {
-		return errorx.New(errorx.StatusInternalServerError, "Server error while updating contract", err)
-	}
-	return nil
+	return errorx.WrapError(
+		db.Debug().Model(&entity.Contract{}).
+			Where("student_code = ?", u.StudentCode).
+			Updates(&u.Contract).Error,
+		errorx.StatusInternalServerError,
+		"Server error while updating contract",
+	)
 }

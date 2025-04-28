@@ -56,15 +56,26 @@ func New(status Status, msg string, err error) MyErr {
 	}
 }
 
-func HandleError(c *gin.Context, err any) {
+func WrapError(err error, status Status, message string) error {
 	if err == nil {
-		return
+		return nil
+	}
+	return New(status, message, err)
+}
+
+func HandleError(c *gin.Context, err any) bool {
+	if err == nil {
+		return false
 	}
 	switch e := err.(type) {
 	case MyErr:
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{
+			Timestamp: time.Now(),
+			Status:    e.Status,
+			Message:   e.Message,
+			Error:     e.Err.Error(),
+		})
 	case *MyErr:
-		// AbortWithStatusJSON stops the chain(prevent Gin from continuing to run the router),
-		// writes the status code and return a JSON body
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{
 			Timestamp: time.Now(),
 			Status:    e.Status,
@@ -79,4 +90,13 @@ func HandleError(c *gin.Context, err any) {
 			Error:     err,
 		})
 	}
+	return true
+}
+
+func BindJSONOrAbort(c *gin.Context, obj any) bool {
+	if err := c.ShouldBindJSON(obj); err != nil {
+		HandleError(c, New(StatusUnprocessableEntity, "Invalid request data", err))
+		return false
+	}
+	return true
 }

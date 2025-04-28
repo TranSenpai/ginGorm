@@ -12,9 +12,7 @@ type createContractTx struct {
 }
 
 func (c createContractTx) Execute(tx *gorm.DB) error {
-	err := tx.Debug().Create(c.Contract).Error
-	if err != nil {
-		return errorx.New(errorx.StatusInternalServerError, "Server error while creating contract", err)
-	}
-	return nil
+	return errorx.WrapError(tx.Debug().Create(&c.Contract).Error,
+		errorx.StatusInternalServerError,
+		"Server error while creating contract")
 }

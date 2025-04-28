@@ -20,13 +20,14 @@ func (cc ContractController) CreateContract(c *gin.Context) {
 	serviceContract := service.GetContractService()
 	var contract model.Contract
 
-	if err := c.ShouldBindJSON(&contract); err != nil {
-		errorx.HandleError(c, errorx.New(errorx.StatusUnprocessableEntity, "Invalid request data", err))
+	if !errorx.BindJSONOrAbort(c, &contract) {
 		return
 	}
 
 	err := serviceContract.CreateContract(ctx, &contract)
-	errorx.HandleError(c, err)
+	if errorx.HandleError(c, err) {
+		return
+	}
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Contract created successfully"})
 }
@@ -39,16 +40,19 @@ func (cc ContractController) UpdateContract(c *gin.Context) {
 	serviceContract := service.GetContractService()
 	var contract model.Contract
 
-	if err := c.ShouldBindJSON(&contract); err != nil {
-		errorx.HandleError(c, errorx.New(errorx.StatusUnprocessableEntity, "Invalid request data", err))
+	if !errorx.BindJSONOrAbort(c, &contract) {
 		return
 	}
 
 	_, err := serviceContract.Search(ctx, studentCode)
-	errorx.HandleError(c, err)
+	if errorx.HandleError(c, err) {
+		return
+	}
 
 	err = serviceContract.UpdateContract(ctx, studentCode, &contract)
-	errorx.HandleError(c, err)
+	if errorx.HandleError(c, err) {
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Contract updated successfully"})
 }
@@ -61,10 +65,14 @@ func (cc ContractController) Delete(c *gin.Context) {
 	serviceContract := service.GetContractService()
 
 	_, err := serviceContract.Search(ctx, studentCode)
-	errorx.HandleError(c, err)
+	if errorx.HandleError(c, err) {
+		return
+	}
 
 	err = serviceContract.DeleteContract(ctx, studentCode)
-	errorx.HandleError(c, err)
+	if errorx.HandleError(c, err) {
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Contract deleted successfully"})
 }
@@ -77,7 +85,9 @@ func (cc ContractController) Search(c *gin.Context) {
 	serviceContract := service.GetContractService()
 
 	contract, err := serviceContract.Search(ctx, studentCode)
-	errorx.HandleError(c, err)
+	if errorx.HandleError(c, err) {
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{"data": contract})
 }
@@ -86,7 +96,9 @@ func (cc ContractController) SearchAll(c *gin.Context) {
 	serviceContract := service.GetContractService()
 
 	contracts, err := serviceContract.SearchAll()
-	errorx.HandleError(c, err)
+	if errorx.HandleError(c, err) {
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{"data": contracts})
 }
@@ -99,7 +111,9 @@ func (cc ContractController) SearchByName(c *gin.Context) {
 	serviceContract := service.GetContractService()
 
 	contract, err := serviceContract.SearchByName(ctx, fullName)
-	errorx.HandleError(c, err)
+	if errorx.HandleError(c, err) {
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{"data": contract})
 }
