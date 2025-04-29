@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	// Khởi tạo router chính và chạy server
+	// Create main router and run server
 	server := gin.Default()
 	router.InitRouter(server)
 	server.Run(":8080")

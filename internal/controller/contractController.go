@@ -44,12 +44,7 @@ func (cc ContractController) UpdateContract(c *gin.Context) {
 		return
 	}
 
-	_, err := serviceContract.Search(ctx, studentCode)
-	if errorx.HandleError(c, err) {
-		return
-	}
-
-	err = serviceContract.UpdateContract(ctx, studentCode, &contract)
+	err := serviceContract.UpdateContract(ctx, studentCode, &contract)
 	if errorx.HandleError(c, err) {
 		return
 	}
@@ -63,13 +58,7 @@ func (cc ContractController) Delete(c *gin.Context) {
 	defer cancel()
 
 	serviceContract := service.GetContractService()
-
-	_, err := serviceContract.Search(ctx, studentCode)
-	if errorx.HandleError(c, err) {
-		return
-	}
-
-	err = serviceContract.DeleteContract(ctx, studentCode)
+	err := serviceContract.DeleteContract(ctx, studentCode)
 	if errorx.HandleError(c, err) {
 		return
 	}

@@ -13,7 +13,7 @@ type deleteContractTx struct {
 
 func (d deleteContractTx) Execute(tx *gorm.DB) error {
 	return errorx.WrapError(
-		tx.Model(&entity.Contract{}).Delete(d.StudentCode).Error,
+		tx.Model(&entity.Contract{}).Where("student_code = ?", d.StudentCode).Delete(&entity.Contract{}).Error,
 		errorx.StatusInternalServerError,
 		"Server error while deleting contract")
 }

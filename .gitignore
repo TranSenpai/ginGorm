@@ -1,7 +1,0 @@
-.dockerignore
-/server/.env
-/server/go.mod
-/server/go.sum
-/server/main.exe
-/mysql/data
-/mysql/config

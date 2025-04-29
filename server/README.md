@@ -1,1 +1,0 @@
-#### [Example dockerfile in golang](https://docs.docker.com/guides/golang/build-images/)
