@@ -10,7 +10,7 @@ func RegisterContract(server *gin.RouterGroup) {
 	api := server.Group("/contract")
 	contractController := controller.NewContractController()
 	api.POST("", contractController.CreateContract)
-	api.DELETE("/:keyword", contractController.Delete)
-	api.PUT("/:keyword", contractController.UpdateContract)
+	api.DELETE("", contractController.Delete)
+	api.PUT("", contractController.UpdateContract)
 	api.GET("", contractController.Search)
 }

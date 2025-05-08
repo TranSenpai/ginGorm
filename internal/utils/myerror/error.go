@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-sql-driver/mysql"
 )
 
 type Status int
@@ -82,6 +83,19 @@ func HandleError(c *gin.Context, err any) bool {
 			Message:   e.Message,
 			Error:     e.Err.Error(),
 		})
+	case *mysql.MySQLError:
+		// Error number: 1062; Symbol: ER_DUP_ENTRY; SQLSTATE: 23000
+		// Message: Duplicate entry '%s' for key %d
+		// The message returned with this error uses the format string for ER_DUP_ENTRY_WITH_KEY_NAME.
+		if e.Number == 1062 {
+			c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{
+				Timestamp: time.Now(),
+				Status:    http.StatusConflict,
+				Message:   "The student code or phone or mail or sign have been existed",
+				Error:     e.Message,
+			})
+		}
+
 	default:
 		c.AbortWithStatusJSON(http.StatusInternalServerError, ErrorResponse{
 			Timestamp: time.Now(),

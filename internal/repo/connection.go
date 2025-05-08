@@ -30,13 +30,12 @@ func init() {
 	}
 
 	dbConn.Debug().Model(&entity.Contract{}).Exec(`
-	ALTER TABLE contracts
+	ALTER TABLE gorm.contracts
 	ADD COLUMN id INT UNSIGNED AUTO_INCREMENT,
-  	ADD COLUMN registry_month TINYINT GENERATED ALWAYS AS (MONTH(registry_at)) STORED,
-	ADD PRIMARY KEY (id, registry_month, student_code)`)
+  	ADD COLUMN registry_month TINYINT GENERATED ALWAYS AS (MONTH(registry_at)) STORED`)
 
 	dbConn.Debug().Model(&entity.Contract{}).Exec(`
-	ALTER TABLE contracts
+	ALTER TABLE gorm.contracts
 	PARTITION BY LIST COLUMNS (registry_month) (
 		PARTITION p01 VALUES IN (1),
 		PARTITION p02 VALUES IN (2),

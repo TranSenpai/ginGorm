@@ -12,8 +12,8 @@ import (
 
 type IService interface {
 	CreateContract(ctx context.Context, m *model.Contract) error
-	UpdateContract(ctx context.Context, keyword any, m *model.Contract) error
-	DeleteContract(ctx context.Context, keyword any) error
+	UpdateContract(ctx context.Context, filter *model.Filter, m *model.Contract) error
+	DeleteContract(ctx context.Context, filter *model.Filter) error
 	Search(ctx context.Context, filter *model.Filter) ([]model.Contract, error)
 }
 
@@ -34,9 +34,9 @@ func toEntity(c model.Contract) *entity.Contract {
 	return &entity.Contract{
 		StudentCode:          c.StudentCode,
 		FullName:             &c.FullName,
-		Email:                &c.Email,
-		Sign:                 &c.Sign,
-		Phone:                &c.Phone,
+		Email:                c.Email,
+		Sign:                 c.Sign,
+		Phone:                c.Phone,
 		Gender:               &c.Gender,
 		DOB:                  &c.DOB,
 		Address:              &c.Address,
@@ -50,9 +50,9 @@ func toContract(e entity.Contract) *model.Contract {
 	return &model.Contract{
 		StudentCode:          e.StudentCode,
 		FullName:             *e.FullName,
-		Email:                *e.Email,
-		Sign:                 *e.Sign,
-		Phone:                *e.Phone,
+		Email:                e.Email,
+		Sign:                 e.Sign,
+		Phone:                e.Phone,
 		Gender:               *e.Gender,
 		DOB:                  *e.DOB,
 		Address:              *e.Address,
@@ -72,24 +72,26 @@ func (c *contractService) CreateContract(ctx context.Context, m *model.Contract)
 		return errorx.New(http.StatusUnprocessableEntity, "Invalid Avatar format", err)
 	}
 	contract := toEntity(*m)
-	contract.Avatar = &decodedAvatar
+	avatarString := string(decodedAvatar)
+	contract.Avatar = &avatarString
 
 	return c.contractRepo.CreateContract(ctx, contract)
 }
 
-func (c *contractService) UpdateContract(ctx context.Context, keyword any, m *model.Contract) error {
+func (c *contractService) UpdateContract(ctx context.Context, filter *model.Filter, m *model.Contract) error {
 	decodedAvatar, err := base64.StdEncoding.DecodeString(m.Avatar)
 	if err != nil {
 		return errorx.New(http.StatusUnprocessableEntity, "Invalid Avatar format", err)
 	}
 	contract := toEntity(*m)
-	contract.Avatar = &decodedAvatar
+	avatarString := string(decodedAvatar)
+	contract.Avatar = &avatarString
 
-	return c.contractRepo.UpdateContract(ctx, keyword, contract)
+	return c.contractRepo.UpdateContract(ctx, filter, contract)
 }
 
-func (c *contractService) DeleteContract(ctx context.Context, keyword any) error {
-	return c.contractRepo.DeleteContract(ctx, keyword)
+func (c *contractService) DeleteContract(ctx context.Context, filter *model.Filter) error {
+	return c.contractRepo.DeleteContract(ctx, filter)
 }
 
 func (s contractService) Search(ctx context.Context, filter *model.Filter) ([]model.Contract, error) {
