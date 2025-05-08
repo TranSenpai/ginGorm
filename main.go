@@ -10,6 +10,7 @@ import (
 func main() {
 	// Create main router and run server
 	server := gin.Default()
+	server.Use()
 	router.InitRouter(server)
 	server.Run(":8080")
 
