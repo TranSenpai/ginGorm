@@ -14,17 +14,17 @@ import (
 // and if the record's length is > 255 and < 510 use the size 510 -> length = 2^n - 1
 type Contract struct {
 	StudentCode          string     `gorm:"type:char(10);"`
-	FullName             string     `gorm:"type:varchar(255);"`
-	Email                string     `gorm:"type:varchar(255);"`
-	Sign                 string     `gorm:"type:varchar(255);"` // Because bcrypt algorithm return 60 characteres
-	Phone                string     `gorm:"type:char(10);"`
-	Gender               uint8      `gorm:"type:tinyint UNSIGNED; default: 1"`
+	FullName             *string    `gorm:"type:varchar(255);"`
+	Email                *string    `gorm:"type:varchar(255);"`
+	Sign                 *string    `gorm:"type:varchar(255);"` // Because bcrypt algorithm return 60 characteres
+	Phone                *string    `gorm:"type:char(10);"`
+	Gender               *uint8     `gorm:"type:tinyint UNSIGNED; default: 1"`
 	DOB                  *time.Time `gorm:"type:date"`
 	Address              *string    `gorm:"type:varchar(255)"`
-	Avatar               []byte     `gorm:"type:mediumblob"` // Should store varchar(510)
-	IsActive             bool       `gorm:"type:bool"`
+	Avatar               *[]byte    `gorm:"type:mediumblob"` // Should store varchar(510)
+	IsActive             *bool      `gorm:"type:bool"`
 	RegistryAt           *time.Time `gorm:"type:timestamp; autoCreateTime;"`
 	LoginAt              *time.Time `gorm:"type:timestamp; autoUpdateTime"`
-	RoomID               string     `gorm:"type:char(5)"`
-	NotificationChannels uint8      `gorm:"type:tinyint UNSIGNED; default: 1"`
+	RoomID               *string    `gorm:"type:char(5)"`
+	NotificationChannels *uint8     `gorm:"type:tinyint UNSIGNED; default: 1"`
 }

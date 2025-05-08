@@ -22,9 +22,8 @@ func init() {
 		panic(err)
 	}
 	dbConn = data
-	GetInstanceContract()
 
-	err = dbConn.AutoMigrate(&entity.Contract{})
+	err = CreateContractTable(dbConn)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -34,7 +33,7 @@ func init() {
 	ALTER TABLE contracts
 	ADD COLUMN id INT UNSIGNED AUTO_INCREMENT,
   	ADD COLUMN registry_month TINYINT GENERATED ALWAYS AS (MONTH(registry_at)) STORED,
-	ADD PRIMARY KEY (id, registry_month)`)
+	ADD PRIMARY KEY (id, registry_month, student_code)`)
 
 	dbConn.Debug().Model(&entity.Contract{}).Exec(`
 	ALTER TABLE contracts
@@ -70,5 +69,5 @@ func GetConnection() (*gorm.DB, error) {
 	}
 
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", username, password, host, port, dbname)
-	return gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	return gorm.Open(mysql.Open(dsn), &gorm.Config{QueryFields: true})
 }

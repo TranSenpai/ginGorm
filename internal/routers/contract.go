@@ -8,12 +8,9 @@ import (
 
 func RegisterContract(server *gin.RouterGroup) {
 	api := server.Group("/contract")
-	contractController := controller.ContractController{}
+	contractController := controller.NewContractController()
 	api.POST("", contractController.CreateContract)
-	api.DELETE("/:studentcode", contractController.Delete)
-	api.PUT("/:studentcode", contractController.UpdateContract)
-	api.GET("/:studentcode", contractController.Search)
-	api.GET("/all", contractController.SearchAll)
-	api.GET("/byname/:fullname", contractController.SearchByName)
-
+	api.DELETE("/:keyword", contractController.Delete)
+	api.PUT("/:keyword", contractController.UpdateContract)
+	api.GET("", contractController.Search)
 }

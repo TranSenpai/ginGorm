@@ -2,80 +2,107 @@ package service
 
 import (
 	"context"
-	"errors"
+	"encoding/base64"
 	"main/internal/entity"
 	model "main/internal/models"
 	repo "main/internal/repo"
 	errorx "main/internal/utils/myerror"
+	"net/http"
 )
 
-type contractService struct{}
+type IService interface {
+	CreateContract(ctx context.Context, m *model.Contract) error
+	UpdateContract(ctx context.Context, keyword any, m *model.Contract) error
+	DeleteContract(ctx context.Context, keyword any) error
+	Search(ctx context.Context, filter *model.Filter) ([]model.Contract, error)
+}
 
-var (
-	ContractService *contractService
-)
+type contractService struct {
+	contractRepo repo.IRepo
+}
 
-func GetContractService() *contractService {
+var ContractService *contractService
+
+func NewContractService() *contractService {
 	if ContractService == nil {
-		ContractService = &contractService{}
+		ContractService = &contractService{contractRepo: repo.GetInstanceContract()}
 	}
 	return ContractService
 }
 
-func (c contractService) CreateContract(ctx context.Context, m *model.Contract) error {
-	contractRepo := repo.GetInstanceContract()
-	buildContract := NewContractBuilder(ctx, m)
-	buildContract = buildContract.MapStudentInfo().MapContactInfo().MapRoomInfo().MapAvatar()
-	if buildContract.buildError != nil {
-		return buildContract.buildError
+func toEntity(c model.Contract) *entity.Contract {
+	return &entity.Contract{
+		StudentCode:          c.StudentCode,
+		FullName:             &c.FullName,
+		Email:                &c.Email,
+		Sign:                 &c.Sign,
+		Phone:                &c.Phone,
+		Gender:               &c.Gender,
+		DOB:                  &c.DOB,
+		Address:              &c.Address,
+		RoomID:               &c.RoomID,
+		IsActive:             &c.IsActive,
+		NotificationChannels: &c.NotificationChannels,
 	}
-
-	if _, err := c.Search(ctx, m.StudentCode); err == nil {
-		return errorx.WrapError(errors.New("Contract has benn existed"), errorx.StatusConflict, "Dupplicate contract")
-	}
-
-	ctx = context.WithValue(ctx, "id", buildContract.entity.StudentCode)
-
-	return contractRepo.CreateContract(ctx, buildContract.entity)
 }
 
-func (c contractService) UpdateContract(ctx context.Context, studentCode string, m *model.Contract) error {
-	contractRepo := repo.GetInstanceContract()
-	if _, err := contractRepo.Search(ctx, studentCode); err != nil {
-		return err
+func toContract(e entity.Contract) *model.Contract {
+	return &model.Contract{
+		StudentCode:          e.StudentCode,
+		FullName:             *e.FullName,
+		Email:                *e.Email,
+		Sign:                 *e.Sign,
+		Phone:                *e.Phone,
+		Gender:               *e.Gender,
+		DOB:                  *e.DOB,
+		Address:              *e.Address,
+		IsActive:             *e.IsActive,
+		RoomID:               *e.RoomID,
+		NotificationChannels: *e.NotificationChannels,
+	}
+}
+
+func (c *contractService) GetContractService() IService {
+	return ContractService
+}
+
+func (c *contractService) CreateContract(ctx context.Context, m *model.Contract) error {
+	decodedAvatar, err := base64.StdEncoding.DecodeString(m.Avatar)
+	if err != nil {
+		return errorx.New(http.StatusUnprocessableEntity, "Invalid Avatar format", err)
+	}
+	contract := toEntity(*m)
+	contract.Avatar = &decodedAvatar
+
+	return c.contractRepo.CreateContract(ctx, contract)
+}
+
+func (c *contractService) UpdateContract(ctx context.Context, keyword any, m *model.Contract) error {
+	decodedAvatar, err := base64.StdEncoding.DecodeString(m.Avatar)
+	if err != nil {
+		return errorx.New(http.StatusUnprocessableEntity, "Invalid Avatar format", err)
+	}
+	contract := toEntity(*m)
+	contract.Avatar = &decodedAvatar
+
+	return c.contractRepo.UpdateContract(ctx, keyword, contract)
+}
+
+func (c *contractService) DeleteContract(ctx context.Context, keyword any) error {
+	return c.contractRepo.DeleteContract(ctx, keyword)
+}
+
+func (s contractService) Search(ctx context.Context, filter *model.Filter) ([]model.Contract, error) {
+	entities, err := s.contractRepo.Search(ctx, filter)
+
+	if err != nil {
+		return nil, err
 	}
 
-	buildContract := NewContractBuilder(ctx, m)
-	buildContract = buildContract.MapStudentInfo().MapContactInfo().MapRoomInfo().MapAvatar()
-	if buildContract.buildError != nil {
-		return buildContract.buildError
-	}
-	ctx = context.WithValue(ctx, "id", studentCode)
-
-	return contractRepo.UpdateContract(ctx, studentCode, buildContract.entity)
-}
-
-func (c contractService) DeleteContract(ctx context.Context, studentCode string) error {
-	contractRepo := repo.GetInstanceContract()
-	if _, err := contractRepo.Search(ctx, studentCode); err != nil {
-		return err
+	var contracts []model.Contract
+	for _, v := range entities {
+		contracts = append(contracts, *toContract(v))
 	}
 
-	ctx = context.WithValue(ctx, "id", studentCode)
-	return contractRepo.DeleteContract(ctx, studentCode)
-}
-
-func (c contractService) Search(ctx context.Context, studentCode string) (entity.Contract, error) {
-	contractRepo := repo.GetInstanceContract()
-	return contractRepo.Search(ctx, studentCode)
-}
-
-func (c contractService) SearchAll() ([]entity.Contract, error) {
-	contractRepo := repo.GetInstanceContract()
-	return contractRepo.SearchAll()
-}
-
-func (c contractService) SearchByName(ctx context.Context, fullName string) (entity.Contract, error) {
-	contractRepo := repo.GetModifyContractByName()
-	return contractRepo.Search(ctx, fullName)
+	return contracts, nil
 }

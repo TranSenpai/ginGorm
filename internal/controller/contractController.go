@@ -11,20 +11,38 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type ContractController struct{}
+type ContractController struct {
+	serviceContract service.IService
+}
 
-func (cc ContractController) CreateContract(c *gin.Context) {
+type Filter struct {
+	StudentCode string
+	FullName    string
+	Email       string
+	Sign        string
+	Phone       string
+	Gender      uint8
+	DOB         time.Time
+	Address     string
+	IsActive    bool
+}
+
+func NewContractController() *ContractController {
+	return &ContractController{
+		serviceContract: service.NewContractService(),
+	}
+}
+
+func (cc *ContractController) CreateContract(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
 
-	serviceContract := service.GetContractService()
 	var contract model.Contract
-
 	if !errorx.BindJSONOrAbort(c, &contract) {
 		return
 	}
 
-	err := serviceContract.CreateContract(ctx, &contract)
+	err := cc.serviceContract.CreateContract(ctx, &contract)
 	if errorx.HandleError(c, err) {
 		return
 	}
@@ -32,19 +50,18 @@ func (cc ContractController) CreateContract(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "Contract created successfully"})
 }
 
-func (cc ContractController) UpdateContract(c *gin.Context) {
-	studentCode := c.Param("studentcode")
+func (cc *ContractController) UpdateContract(c *gin.Context) {
+	keyword := c.Param("keyword")
+
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
 
-	serviceContract := service.GetContractService()
 	var contract model.Contract
-
 	if !errorx.BindJSONOrAbort(c, &contract) {
 		return
 	}
 
-	err := serviceContract.UpdateContract(ctx, studentCode, &contract)
+	err := cc.serviceContract.UpdateContract(ctx, keyword, &contract)
 	if errorx.HandleError(c, err) {
 		return
 	}
@@ -52,13 +69,12 @@ func (cc ContractController) UpdateContract(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Contract updated successfully"})
 }
 
-func (cc ContractController) Delete(c *gin.Context) {
-	studentCode := c.Param("studentcode")
+func (cc *ContractController) Delete(c *gin.Context) {
+	keyword := c.Param("keyword")
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
 
-	serviceContract := service.GetContractService()
-	err := serviceContract.DeleteContract(ctx, studentCode)
+	err := cc.serviceContract.DeleteContract(ctx, keyword)
 	if errorx.HandleError(c, err) {
 		return
 	}
@@ -66,43 +82,21 @@ func (cc ContractController) Delete(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Contract deleted successfully"})
 }
 
-func (cc ContractController) Search(c *gin.Context) {
-	studentCode := c.Param("studentcode")
+func (cc *ContractController) Search(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
 
-	serviceContract := service.GetContractService()
+	var filter model.Filter
+	// ShouldBindQuery Bind the query into a struct filter
+	if err := c.ShouldBindQuery(&filter); err != nil {
+		errorx.HandleError(c, errorx.New(http.StatusBadRequest, "Invalid query parameter", err))
+		return
+	}
 
-	contract, err := serviceContract.Search(ctx, studentCode)
+	result, err := cc.serviceContract.Search(ctx, &filter)
 	if errorx.HandleError(c, err) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": contract})
-}
-
-func (cc ContractController) SearchAll(c *gin.Context) {
-	serviceContract := service.GetContractService()
-
-	contracts, err := serviceContract.SearchAll()
-	if errorx.HandleError(c, err) {
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"data": contracts})
-}
-
-func (cc ContractController) SearchByName(c *gin.Context) {
-	fullName := c.Param("fullname")
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
-	defer cancel()
-
-	serviceContract := service.GetContractService()
-
-	contract, err := serviceContract.SearchByName(ctx, fullName)
-	if errorx.HandleError(c, err) {
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"data": contract})
+	c.JSON(http.StatusOK, result)
 }
