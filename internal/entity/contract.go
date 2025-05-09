@@ -14,7 +14,9 @@ import (
 // and if the record's length is > 255 and < 510 use the size 510 -> length = 2^n - 1
 type Contract struct {
 	StudentCode          string     `gorm:"type:char(10); primaryKey"`
-	FullName             *string    `gorm:"type:varchar(255);"`
+	FirstName            *string    `gorm:"type:varchar(255);"`
+	LastName             *string    `gorm:"type:varchar(255);"`
+	MiddleName           *string    `gorm:"type:varchar(255);"`
 	Email                string     `gorm:"type:varchar(255); unique"`
 	Sign                 string     `gorm:"type:varchar(255); unique"` // Because bcrypt algorithm return 60 characteres
 	Phone                string     `gorm:"type:char(10); unique"`

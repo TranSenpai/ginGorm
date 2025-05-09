@@ -15,9 +15,9 @@ type contractRepo struct {
 	db *gorm.DB
 }
 
-func (cr *contractRepo) CreateContract(ctx context.Context, createContract entity.Contract) error {
+func (cr *contractRepo) CreateContract(ctx context.Context, createContract *entity.Contract) error {
 	return cr.db.Transaction(func(tx *gorm.DB) error {
-		return tx.Debug().Model(&entity.Contract{}).Create(&createContract).WithContext(ctx).Error
+		return tx.Debug().Model(&entity.Contract{}).Create(createContract).WithContext(ctx).Error
 	})
 }
 
@@ -28,8 +28,14 @@ func buildWhere(filter models.Filter, tx *gorm.DB) *gorm.DB {
 	if filter.Email != nil {
 		tx = tx.Where("email IN ?", filter.Email)
 	}
-	if filter.FullName != nil {
-		tx = tx.Where("full_name LIKE ?", *filter.FullName+"%")
+	if filter.FirstName != nil {
+		tx = tx.Where("first_name like ?", *filter.FirstName+"%")
+	}
+	if filter.LastName != nil {
+		tx = tx.Where("last_name like ?", *filter.LastName+"%")
+	}
+	if filter.MiddleName != nil {
+		tx = tx.Where("middle_name like ?", *filter.MiddleName+"%")
 	}
 	if filter.Phone != nil {
 		tx = tx.Where("phone IN ?", filter.Phone)
@@ -62,9 +68,11 @@ func buildWhere(filter models.Filter, tx *gorm.DB) *gorm.DB {
 	return tx
 }
 
-func (cr *contractRepo) UpdateContract(ctx context.Context, filter models.Filter, contract entity.Contract) error {
+func (cr *contractRepo) UpdateContract(ctx context.Context, filter models.Filter, contract *entity.Contract) error {
 	return cr.db.Transaction(func(tx *gorm.DB) error {
 		tx = buildWhere(filter, tx)
+		// Updates supports updating with struct or map[string]interface{},
+		// when updating with struct it will only update non-zero fields by default
 		return tx.Debug().Model(&entity.Contract{}).Updates(contract).WithContext(ctx).Error
 	})
 }

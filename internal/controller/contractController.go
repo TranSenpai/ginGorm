@@ -12,7 +12,7 @@ import (
 )
 
 type ContractController struct {
-	serviceContract service.IService
+	serviceContract service.IContractService
 }
 
 func NewContractController() *ContractController {
@@ -25,7 +25,7 @@ func (cc *ContractController) CreateContract(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
 
-	var contract model.Contract
+	var contract *model.Contract
 	if err := c.ShouldBindJSON(&contract); err != nil {
 		errorx.HandleError(c, errorx.New(http.StatusUnprocessableEntity, "Invalid request data", err))
 		return
@@ -46,7 +46,7 @@ func (cc *ContractController) UpdateContract(c *gin.Context) {
 		return
 	}
 
-	var contract model.Contract
+	var contract *model.Contract
 	if err := c.ShouldBindJSON(&contract); err != nil {
 		errorx.HandleError(c, errorx.New(http.StatusUnprocessableEntity, "Invalid request data", err))
 		return

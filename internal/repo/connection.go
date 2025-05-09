@@ -30,12 +30,11 @@ func init() {
 	}
 
 	dbConn.Debug().Model(&entity.Contract{}).Exec(`
-	ALTER TABLE gorm.contracts
-	ADD COLUMN id INT UNSIGNED AUTO_INCREMENT,
-  	ADD COLUMN registry_month TINYINT GENERATED ALWAYS AS (MONTH(registry_at)) STORED`)
+	ALTER TABLE contracts
+  	ADD COLUMN registry_month CHAR(10) GENERATED ALWAYS AS (MONTH(registry_at)) STORED`)
 
 	dbConn.Debug().Model(&entity.Contract{}).Exec(`
-	ALTER TABLE gorm.contracts
+	ALTER TABLE contracts
 	PARTITION BY LIST COLUMNS (registry_month) (
 		PARTITION p01 VALUES IN (1),
 		PARTITION p02 VALUES IN (2),
@@ -50,6 +49,10 @@ func init() {
 		PARTITION p11 VALUES IN (11),
 		PARTITION p12 VALUES IN (12)
 	)`)
+
+	dbConn.Debug().Model(&entity.Contract{}).Exec(`
+	CREATE FULLTEXT INDEX idx_full_name
+	ON contracts(first_name, last_name, middle_name)`)
 }
 
 func GetConnection() (*gorm.DB, error) {

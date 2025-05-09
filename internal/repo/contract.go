@@ -12,7 +12,7 @@ func CreateContractTable(connection *gorm.DB) error {
 	return connection.AutoMigrate(&entity.Contract{})
 }
 
-func GetInstanceContract() IRepo {
+func GetInstanceContract() IContractRepo {
 	if ContractRepo == nil {
 		ContractRepo = &contractRepo{db: dbConn}
 	}

@@ -94,6 +94,13 @@ func HandleError(c *gin.Context, err any) bool {
 				Message:   "The student code or phone or mail or sign have been existed",
 				Error:     e.Message,
 			})
+		} else {
+			c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{
+				Timestamp: time.Now(),
+				Status:    http.StatusInternalServerError,
+				Message:   "Internal Server Error",
+				Error:     e.Message,
+			})
 		}
 
 	default:
