@@ -29,7 +29,7 @@ func buildWhere(filter models.Filter, tx *gorm.DB) *gorm.DB {
 		tx = tx.Where("email IN ?", filter.Email)
 	}
 	if filter.FullName != nil {
-		tx = tx.Where("full_name IN ?", filter.FullName)
+		tx = tx.Where("full_name LIKE ?", *filter.FullName+"%")
 	}
 	if filter.Phone != nil {
 		tx = tx.Where("phone IN ?", filter.Phone)
@@ -44,13 +44,13 @@ func buildWhere(filter models.Filter, tx *gorm.DB) *gorm.DB {
 		tx = tx.Where("dob IN ?", filter.DOB)
 	}
 	if filter.Gender != nil {
-		tx = tx.Where("gender IN ?", filter.Gender)
+		tx = tx.Where("gender = ?", filter.Gender)
 	}
 	if filter.IsActive != nil {
-		tx = tx.Where("is_active IN ?", filter.IsActive)
+		tx = tx.Where("is_active = ?", *filter.IsActive)
 	}
 	if filter.NotificationChannels != nil {
-		tx = tx.Where("notification_channels IN ?", filter.NotificationChannels)
+		tx = tx.Where("notification_channels = ?", filter.NotificationChannels)
 	}
 	if filter.Address != nil {
 		tx = tx.Where("address IN ?", filter.Address)

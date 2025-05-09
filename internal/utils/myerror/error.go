@@ -106,11 +106,3 @@ func HandleError(c *gin.Context, err any) bool {
 	}
 	return true
 }
-
-func BindJSONOrAbort(c *gin.Context, obj any) bool {
-	if err := c.ShouldBindJSON(obj); err != nil {
-		HandleError(c, New(http.StatusUnprocessableEntity, "Invalid request data", err))
-		return false
-	}
-	return true
-}

@@ -22,7 +22,7 @@ type Contract struct {
 	DOB                  *time.Time `gorm:"type:date"`
 	Address              *string    `gorm:"type:varchar(255)"`
 	Avatar               *string    `gorm:"type:varchar(1020)"` // Should store varchar(1020)
-	IsActive             *bool      `gorm:"type:bool"`
+	IsActive             *bool      `gorm:"type:boolean"`
 	RegistryAt           *time.Time `gorm:"type:timestamp; autoCreateTime;"`
 	LoginAt              *time.Time `gorm:"type:timestamp; autoUpdateTime"`
 	RoomID               *string    `gorm:"type:char(5)"`

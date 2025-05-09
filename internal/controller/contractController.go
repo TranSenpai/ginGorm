@@ -26,7 +26,8 @@ func (cc *ContractController) CreateContract(c *gin.Context) {
 	defer cancel()
 
 	var contract model.Contract
-	if !errorx.BindJSONOrAbort(c, &contract) {
+	if err := c.ShouldBindJSON(&contract); err != nil {
+		errorx.HandleError(c, errorx.New(http.StatusUnprocessableEntity, "Invalid request data", err))
 		return
 	}
 
@@ -46,7 +47,8 @@ func (cc *ContractController) UpdateContract(c *gin.Context) {
 	}
 
 	var contract model.Contract
-	if !errorx.BindJSONOrAbort(c, &contract) {
+	if err := c.ShouldBindJSON(&contract); err != nil {
+		errorx.HandleError(c, errorx.New(http.StatusUnprocessableEntity, "Invalid request data", err))
 		return
 	}
 

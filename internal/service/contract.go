@@ -39,6 +39,7 @@ func ToEntity(c model.Contract) entity.Contract {
 		Phone:                c.Phone,
 		Gender:               &c.Gender,
 		DOB:                  &c.DOB,
+		Avatar:               &c.Avatar,
 		Address:              &c.Address,
 		RoomID:               &c.RoomID,
 		IsActive:             &c.IsActive,
@@ -56,8 +57,8 @@ func ToContract(e entity.Contract) model.Contract {
 		Gender:               *e.Gender,
 		DOB:                  *e.DOB,
 		Address:              *e.Address,
-		IsActive:             *e.IsActive,
 		RoomID:               *e.RoomID,
+		IsActive:             *e.IsActive,
 		NotificationChannels: *e.NotificationChannels,
 	}
 }
@@ -66,16 +67,17 @@ func (c *contractService) GetContractService() IService {
 	return ContractService
 }
 
-func (c *contractService) CreateContract(ctx context.Context, m model.Contract) error {
-	decodedAvatar, err := base64.StdEncoding.DecodeString(m.Avatar)
+func (c *contractService) CreateContract(ctx context.Context, contract model.Contract) error {
+	decodedAvatar, err := base64.StdEncoding.DecodeString(contract.Avatar)
 	if err != nil {
 		return errorx.New(http.StatusUnprocessableEntity, "Invalid Avatar format", err)
 	}
-	contract := ToEntity(m)
-	avatarString := string(decodedAvatar)
-	contract.Avatar = &avatarString
 
-	return c.contractRepo.CreateContract(ctx, contract)
+	contractEntity := ToEntity(contract)
+	avatarString := string(decodedAvatar)
+	contractEntity.Avatar = &avatarString
+
+	return c.contractRepo.CreateContract(ctx, contractEntity)
 }
 
 func (c *contractService) UpdateContract(ctx context.Context, filter model.Filter, contract model.Contract) error {
@@ -83,6 +85,7 @@ func (c *contractService) UpdateContract(ctx context.Context, filter model.Filte
 	if err != nil {
 		return errorx.New(http.StatusUnprocessableEntity, "Invalid Avatar format", err)
 	}
+
 	contractEntity := ToEntity(contract)
 	strAvatar := string(decodedAvatar)
 	contractEntity.Avatar = &strAvatar
