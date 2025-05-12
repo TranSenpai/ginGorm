@@ -2,14 +2,8 @@ package myerror
 
 import (
 	"fmt"
-	"net/http"
 	"time"
-
-	"github.com/gin-gonic/gin"
-	"github.com/go-sql-driver/mysql"
 )
-
-type Status int
 
 // const (
 // 	// 2xx Success
@@ -33,83 +27,21 @@ type Status int
 // )
 
 type MyErr struct {
-	Status  Status
-	Message string
-	Err     error
+	Status    int       `json:"statusCode"`
+	Message   string    `json:"message,omitempty"`
+	Err       error     `json:"error,omitempty"`
+	Timestamp time.Time `json:"timestamp,omitempty"`
 }
 
 func (e MyErr) Error() string {
 	return fmt.Sprintf("Status: %d, Message: %s, Error: %v", e.Status, e.Message, e.Err)
 }
 
-type ErrorResponse struct {
-	Timestamp time.Time `json:"timestamp"`
-	Status    Status    `json:"status"`
-	Message   string    `json:"message"`
-	Error     any       `json:"error,omitempty"`
-}
-
-func New(status Status, msg string, err error) MyErr {
+func NewMyError(status int, msg string, err error, time time.Time) MyErr {
 	return MyErr{
-		Status:  status,
-		Message: msg,
-		Err:     err,
+		Status:    status,
+		Message:   msg,
+		Err:       err,
+		Timestamp: time,
 	}
-}
-
-func WrapError(err error, status Status, message string) error {
-	if err == nil {
-		return nil
-	}
-	return New(status, message, err)
-}
-
-func HandleError(c *gin.Context, err any) bool {
-	if err == nil {
-		return false
-	}
-	switch e := err.(type) {
-	case MyErr:
-		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{
-			Timestamp: time.Now(),
-			Status:    e.Status,
-			Message:   e.Message,
-			Error:     e.Err.Error(),
-		})
-	case *MyErr:
-		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{
-			Timestamp: time.Now(),
-			Status:    e.Status,
-			Message:   e.Message,
-			Error:     e.Err.Error(),
-		})
-	case *mysql.MySQLError:
-		// Error number: 1062; Symbol: ER_DUP_ENTRY; SQLSTATE: 23000
-		// Message: Duplicate entry '%s' for key %d
-		// The message returned with this error uses the format string for ER_DUP_ENTRY_WITH_KEY_NAME.
-		if e.Number == 1062 {
-			c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{
-				Timestamp: time.Now(),
-				Status:    http.StatusConflict,
-				Message:   "The student code or phone or mail or sign have been existed",
-				Error:     e.Message,
-			})
-		} else {
-			c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{
-				Timestamp: time.Now(),
-				Status:    http.StatusInternalServerError,
-				Message:   "Internal Server Error",
-				Error:     e.Message,
-			})
-		}
-
-	default:
-		c.AbortWithStatusJSON(http.StatusInternalServerError, ErrorResponse{
-			Timestamp: time.Now(),
-			Status:    http.StatusInternalServerError,
-			Message:   "Internal Server Error",
-			Error:     err,
-		})
-	}
-	return true
 }

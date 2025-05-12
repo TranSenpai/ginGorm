@@ -18,20 +18,20 @@ import (
 // whether strict SQL mode is enabled.
 
 type Contract struct {
-	StudentCode          string     `json:"student_code,omitempty" binding:"required"`
-	FirstName            *string    `json:"first_name,omitempty"`
-	LastName             *string    `json:"last_name,omitempty"`
-	MiddleName           *string    `json:"middle_name,omitempty"`
-	Email                string     `json:"email,omitempty" binding:"required"`
-	Sign                 string     `json:"sign,omitempty" binding:"required"`
-	Phone                string     `json:"phone,omitempty" binding:"required"`
-	Gender               *uint8     `json:"gender,omitempty"`
-	DOB                  *time.Time `json:"dob,omitempty"`
-	Address              *string    `json:"address,omitempty"`
-	Avatar               *string    `json:"avatar,omitempty"`
-	IsActive             *bool      `json:"is_active,omitempty"`
-	RegistryAt           *time.Time `json:"registry_at,omitempty"`
-	LoginAt              *time.Time `json:"login_at,omitempty"`
-	RoomID               *string    `json:"room_id,omitempty"`
-	NotificationChannels *uint8     `json:"notification_channels,omitempty"`
+	StudentCode          string     `json:"StudentCode,omitempty"`
+	FirstName            *string    `json:"FirstName,omitempty"`
+	LastName             *string    `json:"LastName,omitempty"`
+	MiddleName           *string    `json:"MiddleName,omitempty"`
+	Email                string     `json:"Email,omitempty"`
+	Sign                 string     `json:"Sign,omitempty"`
+	Phone                string     `json:"Phone,omitempty"`
+	Gender               *uint8     `json:"Gender,omitempty"`
+	DOB                  *time.Time `json:"DOB,omitempty"`
+	Address              *string    `json:"Address,omitempty"`
+	Avatar               *string    `json:"Avatar,omitempty"`
+	IsActive             *bool      `json:"IsActive,omitempty"`
+	RegistryAt           *time.Time `json:"RegistryAt,omitempty"`
+	LoginAt              *time.Time `json:"LoginAt,omitempty"`
+	RoomID               *string    `json:"RoomID,omitempty"`
+	NotificationChannels *uint8     `json:"NotificationChannels,omitempty"`
 }

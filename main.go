@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"main/internal/midllewares"
 	router "main/internal/routers"
 
 	"github.com/gin-gonic/gin"
@@ -10,13 +10,10 @@ import (
 func main() {
 	// Create main router and run server
 	server := gin.Default()
-	server.Use()
+	// Register a middleware, Use() takes a gin.handlerFunc slice and return IRoute interface
+	server.Use(
+		midllewares.ErrorHander(),
+	)
 	router.InitRouter(server)
 	server.Run(":8080")
-
-	var num uint8
-	var str string
-
-	fmt.Print(num)
-	fmt.Print(str)
 }

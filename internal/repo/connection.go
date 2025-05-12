@@ -49,10 +49,6 @@ func init() {
 		PARTITION p11 VALUES IN (11),
 		PARTITION p12 VALUES IN (12)
 	)`)
-
-	dbConn.Debug().Model(&entity.Contract{}).Exec(`
-	CREATE FULLTEXT INDEX idx_full_name
-	ON contracts(first_name, last_name, middle_name)`)
 }
 
 func GetConnection() (*gorm.DB, error) {

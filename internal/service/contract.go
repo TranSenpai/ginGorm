@@ -8,6 +8,7 @@ import (
 	repo "main/internal/repo"
 	errorx "main/internal/utils/myerror"
 	"net/http"
+	"time"
 )
 
 type IContractService interface {
@@ -121,7 +122,7 @@ func (c *contractService) CreateContract(ctx context.Context, contract *model.Co
 	if contract.Avatar != nil {
 		decodedAvatar, err := base64.StdEncoding.DecodeString(*contract.Avatar)
 		if err != nil {
-			return errorx.New(http.StatusUnprocessableEntity, "Invalid Avatar format", err)
+			return errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid Avatar format", err, time.Now())
 		}
 		avatarString := string(decodedAvatar)
 		contractEntity.Avatar = &avatarString
@@ -135,7 +136,7 @@ func (c *contractService) UpdateContract(ctx context.Context, filter model.Filte
 	if contract.Avatar != nil {
 		decodedAvatar, err := base64.StdEncoding.DecodeString(*contract.Avatar)
 		if err != nil {
-			return errorx.New(http.StatusUnprocessableEntity, "Invalid Avatar format", err)
+			return errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid Avatar format", err, time.Now())
 		}
 		avatarString := string(decodedAvatar)
 		contractEntity.Avatar = &avatarString

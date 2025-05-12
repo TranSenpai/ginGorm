@@ -7,6 +7,7 @@ import (
 	"main/internal/models"
 	errorx "main/internal/utils/myerror"
 	"net/http"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -91,10 +92,10 @@ func (cr *contractRepo) Search(ctx context.Context, filter models.Filter) ([]ent
 		return tx.Debug().Model(&entity.Contract{}).Find(&lst).Error
 	})
 	if len(lst) == 0 {
-		return lst, errorx.New(http.StatusNotFound, "Your contract does not exist", errors.New("contract not found"))
+		return lst, errorx.NewMyError(http.StatusNotFound, "Your contract does not exist", errors.New("contract not found"), time.Now())
 	}
 	if err != nil {
-		return lst, errorx.New(http.StatusInternalServerError, "Server error while searching contract", err)
+		return lst, errorx.NewMyError(http.StatusInternalServerError, "Server error while searching contract", err, time.Now())
 	}
 	return lst, nil
 }
