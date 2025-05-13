@@ -16,5 +16,5 @@ type Filter struct {
 	Avatar               []string
 	IsActive             *bool
 	RoomID               []string
-	NotificationChannels []uint8
+	NotificationChannels []uint
 }

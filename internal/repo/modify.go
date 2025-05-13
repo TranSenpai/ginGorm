@@ -18,7 +18,11 @@ type contractRepo struct {
 
 func (cr *contractRepo) CreateContract(ctx context.Context, createContract *entity.Contract) error {
 	return cr.db.Transaction(func(tx *gorm.DB) error {
-		return tx.Debug().Model(&entity.Contract{}).Create(createContract).WithContext(ctx).Error
+		err := tx.Debug().Model(&entity.Contract{}).Create(createContract).WithContext(ctx).Error
+		if err != nil {
+			return GetError(err)
+		}
+		return nil
 	})
 }
 
@@ -51,13 +55,13 @@ func buildWhere(filter models.Filter, tx *gorm.DB) *gorm.DB {
 		tx = tx.Where("dob IN ?", filter.DOB)
 	}
 	if filter.Gender != nil {
-		tx = tx.Where("gender = ?", filter.Gender)
+		tx = tx.Where("gender IN ?", filter.Gender)
 	}
 	if filter.IsActive != nil {
 		tx = tx.Where("is_active = ?", *filter.IsActive)
 	}
 	if filter.NotificationChannels != nil {
-		tx = tx.Where("notification_channels = ?", filter.NotificationChannels)
+		tx = tx.Where("notification_channels IN ?", filter.NotificationChannels)
 	}
 	if filter.Address != nil {
 		tx = tx.Where("address IN ?", filter.Address)
@@ -74,14 +78,22 @@ func (cr *contractRepo) UpdateContract(ctx context.Context, filter models.Filter
 		tx = buildWhere(filter, tx)
 		// Updates supports updating with struct or map[string]interface{},
 		// when updating with struct it will only update non-zero fields by default
-		return tx.Debug().Model(&entity.Contract{}).Updates(contract).WithContext(ctx).Error
+		err := tx.Debug().Model(&entity.Contract{}).Updates(*contract).WithContext(ctx).Error
+		if err != nil {
+			return GetError(err)
+		}
+		return nil
 	})
 }
 
 func (cr *contractRepo) DeleteContract(ctx context.Context, filter models.Filter) error {
 	return cr.db.Transaction(func(tx *gorm.DB) error {
 		tx = buildWhere(filter, tx)
-		return tx.Debug().Model(&entity.Contract{}).Delete(&entity.Contract{}).WithContext(ctx).Error
+		err := tx.Debug().Model(&entity.Contract{}).Delete(&entity.Contract{}).WithContext(ctx).Error
+		if err != nil {
+			return GetError(err)
+		}
+		return nil
 	})
 }
 

@@ -68,6 +68,7 @@ func (cc *ContractController) UpdateContract(ginContext *gin.Context) {
 	defer cancel()
 
 	if err := cc.serviceContract.UpdateContract(ctx, filter, contract); err != nil {
+		// Error attaches an error to the current context.
 		ginContext.Error(err)
 		return
 	}

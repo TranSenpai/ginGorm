@@ -27,18 +27,18 @@ import (
 // )
 
 type MyErr struct {
-	Status    int       `json:"statusCode"`
+	Status    int       `json:"-"`
 	Message   string    `json:"message,omitempty"`
 	Err       error     `json:"error,omitempty"`
 	Timestamp time.Time `json:"timestamp,omitempty"`
 }
 
-func (e MyErr) Error() string {
+func (e *MyErr) Error() string {
 	return fmt.Sprintf("Status: %d, Message: %s, Error: %v", e.Status, e.Message, e.Err)
 }
 
-func NewMyError(status int, msg string, err error, time time.Time) MyErr {
-	return MyErr{
+func NewMyError(status int, msg string, err error, time time.Time) error {
+	return &MyErr{
 		Status:    status,
 		Message:   msg,
 		Err:       err,
