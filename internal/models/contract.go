@@ -18,20 +18,20 @@ import (
 // whether strict SQL mode is enabled.
 
 type Contract struct {
-	StudentCode          string     `json:"StudentCode,omitempty"`
+	ID                   *uint      `json:"ID,omitempty"`
+	StudentCode          *string    `json:"StudentCode,omitempty"`
 	FirstName            *string    `json:"FirstName,omitempty"`
 	LastName             *string    `json:"LastName,omitempty"`
 	MiddleName           *string    `json:"MiddleName,omitempty"`
-	Email                string     `json:"Email,omitempty"`
-	Sign                 string     `json:"Sign,omitempty"`
-	Phone                string     `json:"Phone,omitempty"`
-	Gender               *uint8     `json:"Gender,omitempty"`
+	Email                *string    `json:"Email,omitempty"`
+	Sign                 *string    `json:"Sign,omitempty"`
+	Phone                *string    `json:"Phone,omitempty"`
+	Gender               *uint      `json:"Gender,omitempty"`
 	DOB                  *time.Time `json:"DOB,omitempty"`
 	Address              *string    `json:"Address,omitempty"`
 	Avatar               *string    `json:"Avatar,omitempty"`
 	IsActive             *bool      `json:"IsActive,omitempty"`
 	RegistryAt           *time.Time `json:"RegistryAt,omitempty"`
-	LoginAt              *time.Time `json:"LoginAt,omitempty"`
 	RoomID               *string    `json:"RoomID,omitempty"`
-	NotificationChannels *uint8     `json:"NotificationChannels,omitempty"`
+	NotificationChannels *uint      `json:"NotificationChannels,omitempty"`
 }

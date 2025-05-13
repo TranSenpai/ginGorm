@@ -13,20 +13,20 @@ import (
 // so if the record's length is < 255, we should declare the length is 255 to take the most of capacity of bit length
 // and if the record's length is > 255 and < 510 use the size 510 -> length = 2^n - 1
 type Contract struct {
-	StudentCode          string     `gorm:"type:char(10); primaryKey"`
-	FirstName            *string    `gorm:"type:varchar(255);"`
-	LastName             *string    `gorm:"type:varchar(255);"`
+	ID                   uint       `gorm:"type:integer UNSIGNED; primaryKey"`
+	StudentCode          string     `gorm:"type:char(10); index:idx_student_code"`
+	FirstName            string     `gorm:"type:varchar(255); index:idx_student_info, priority:1"`
+	LastName             string     `gorm:"type:varchar(255); index:idx_student_info, priority:2"`
 	MiddleName           *string    `gorm:"type:varchar(255);"`
-	Email                string     `gorm:"type:varchar(255); unique"`
-	Sign                 string     `gorm:"type:varchar(255); unique"` // Because bcrypt algorithm return 60 characteres
-	Phone                string     `gorm:"type:char(10); unique"`
-	Gender               *uint8     `gorm:"type:tinyint UNSIGNED; default: 1"`
-	DOB                  *time.Time `gorm:"type:date"`
+	Email                string     `gorm:"type:varchar(255); index:idx_email"`
+	Sign                 string     `gorm:"type:varchar(255); index:idx_sign"` // Because bcrypt algorithm return 60 characteres
+	Phone                string     `gorm:"type:char(10); index: idx_phone"`
+	Gender               *uint      `gorm:"type:tinyint UNSIGNED;"`
+	DOB                  *time.Time `gorm:"type:date; index:idx_student_info, priority:4"`
 	Address              *string    `gorm:"type:varchar(255)"`
 	Avatar               *string    `gorm:"type:varchar(1020)"` // Should store varchar(1020)
 	IsActive             *bool      `gorm:"type:boolean"`
 	RegistryAt           *time.Time `gorm:"type:timestamp; autoCreateTime;"`
-	LoginAt              *time.Time `gorm:"type:timestamp; autoUpdateTime"`
 	RoomID               *string    `gorm:"type:char(5)"`
-	NotificationChannels *uint8     `gorm:"type:tinyint UNSIGNED; default: 1"`
+	NotificationChannels *uint      `gorm:"type:tinyint UNSIGNED;"`
 }

@@ -3,10 +3,12 @@ package service
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"main/internal/entity"
 	model "main/internal/models"
 	repo "main/internal/repo"
 	errorx "main/internal/utils/myerror"
+	"math/rand/v2"
 	"net/http"
 	"time"
 )
@@ -35,114 +37,59 @@ func (c *contractService) GetContractService() IContractService {
 	return ContractService
 }
 
-func ToEntity(contractModel *model.Contract) *entity.Contract {
-	var contractEntity entity.Contract
-	if contractModel.FirstName != nil {
-		contractEntity.FirstName = contractModel.FirstName
+func DecodeAvatar(avatar string) (*string, error) {
+	decodedAvatar, err := base64.StdEncoding.DecodeString(avatar)
+	if err != nil {
+		return nil, errorx.NewMyError(http.StatusInternalServerError, "Can not parse avatar", err, time.Now())
 	}
-	if contractModel.LastName != nil {
-		contractEntity.LastName = contractModel.LastName
-	}
-	if contractModel.MiddleName != nil {
-		contractEntity.MiddleName = contractModel.MiddleName
-	}
-	if contractModel.Gender != nil {
-		contractEntity.Gender = contractModel.Gender
-	}
-	if contractModel.Avatar != nil {
-		contractEntity.Avatar = contractModel.Avatar
-	}
-	if contractModel.Address != nil {
-		contractEntity.Address = contractModel.Address
-	}
-	if contractModel.DOB != nil {
-		contractEntity.DOB = contractModel.DOB
-	}
-	if contractModel.RoomID != nil {
-		contractEntity.RoomID = contractModel.RoomID
-	}
-	if contractModel.IsActive != nil {
-		contractEntity.IsActive = contractModel.IsActive
-	}
-	if contractModel.NotificationChannels != nil {
-		contractEntity.NotificationChannels = contractModel.NotificationChannels
-	}
+	avatarString := string(decodedAvatar)
 
-	contractEntity.StudentCode = contractModel.StudentCode
-	contractEntity.Email = contractModel.Email
-	contractEntity.Sign = contractModel.Sign
-	contractEntity.Phone = contractModel.Phone
-
-	return &contractEntity
-}
-
-func ToContract(contractEntity *entity.Contract) *model.Contract {
-	var contractModel model.Contract
-	if contractEntity.FirstName != nil {
-		contractModel.FirstName = contractEntity.FirstName
-	}
-	if contractEntity.LastName != nil {
-		contractModel.LastName = contractEntity.LastName
-	}
-	if contractEntity.MiddleName != nil {
-		contractModel.MiddleName = contractEntity.MiddleName
-	}
-	if contractEntity.Gender != nil {
-		contractModel.Gender = contractEntity.Gender
-	}
-	if contractEntity.Avatar != nil {
-		contractModel.Avatar = contractEntity.Avatar
-	}
-	if contractEntity.Address != nil {
-		contractModel.Address = contractEntity.Address
-	}
-	if contractEntity.DOB != nil {
-		contractModel.DOB = contractEntity.DOB
-	}
-	if contractEntity.RoomID != nil {
-		contractModel.RoomID = contractEntity.RoomID
-	}
-	if contractEntity.IsActive != nil {
-		contractModel.IsActive = contractEntity.IsActive
-	}
-	if contractEntity.NotificationChannels != nil {
-		contractModel.NotificationChannels = contractEntity.NotificationChannels
-	}
-
-	contractModel.StudentCode = contractEntity.StudentCode
-	contractModel.Email = contractEntity.Email
-	contractModel.Sign = contractEntity.Sign
-	contractModel.Phone = contractEntity.Phone
-
-	return &contractModel
+	return &avatarString, nil
 }
 
 func (c *contractService) CreateContract(ctx context.Context, contract *model.Contract) error {
-	contractEntity := ToEntity(contract)
-	if contract.Avatar != nil {
-		decodedAvatar, err := base64.StdEncoding.DecodeString(*contract.Avatar)
-		if err != nil {
-			return errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid Avatar format", err, time.Now())
-		}
-		avatarString := string(decodedAvatar)
-		contractEntity.Avatar = &avatarString
+	var contractEntity *entity.Contract
+	if contract == nil {
+		return errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid data format", errors.New("contract empty"), time.Now())
 	}
+
+	if err := CheckRequiredField(contract); err != nil {
+		return errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid data format", errors.New("contract empty"), time.Now())
+	}
+	contractEntity = ToEntity(contract)
+
+	if contract.Avatar != nil {
+		return errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid Avatar format", errors.New("avatar's format is not base64"), time.Now())
+	}
+
+	avatarString, err := DecodeAvatar(*contract.Avatar)
+	if err != nil {
+		return err
+	}
+	contractEntity.Avatar = avatarString
+
+	timeNow := time.Now()
+	contractEntity.ID = uint(rand.UintN(uint(timeNow.Nanosecond())))
 
 	return c.contractRepo.CreateContract(ctx, contractEntity)
 }
 
 func (c *contractService) UpdateContract(ctx context.Context, filter model.Filter, contract *model.Contract) error {
-	contractEntity := ToEntity(contract)
-	if contract.Avatar != nil {
-		decodedAvatar, err := base64.StdEncoding.DecodeString(*contract.Avatar)
-		if err != nil {
-			return errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid Avatar format", err, time.Now())
-		}
-		avatarString := string(decodedAvatar)
-		contractEntity.Avatar = &avatarString
+	var contractEntity entity.Contract
+	if contract == nil {
+		return errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid Avatar format", errors.New("contract empty"), time.Now())
 	}
 
-	return c.contractRepo.UpdateContract(ctx, filter, contractEntity)
+	if contract.Avatar != nil {
+		return errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid Avatar format", errors.New("avatar's format is not base64"), time.Now())
+	}
+	avatarString, err := DecodeAvatar(*contract.Avatar)
+	if err != nil {
+		return err
+	}
+	contractEntity.Avatar = avatarString
+
+	return c.contractRepo.UpdateContract(ctx, filter, &contractEntity)
 }
 
 func (c *contractService) DeleteContract(ctx context.Context, filter model.Filter) error {

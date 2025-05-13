@@ -3,14 +3,15 @@ package models
 import "time"
 
 type Filter struct {
+	ID                   []uint
 	StudentCode          []string
-	FirstName            *string
-	LastName             *string
-	MiddleName           *string
+	FirstName            []string
+	LastName             []string
+	MiddleName           []string
 	Email                []string
 	Sign                 []string
 	Phone                []string
-	Gender               []uint8
+	Gender               *uint
 	DOB                  []time.Time
 	Address              []string
 	Avatar               []string

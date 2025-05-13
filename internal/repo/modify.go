@@ -2,12 +2,8 @@ package repo
 
 import (
 	"context"
-	"errors"
 	"main/internal/entity"
 	"main/internal/models"
-	errorx "main/internal/utils/myerror"
-	"net/http"
-	"time"
 
 	"gorm.io/gorm"
 )
@@ -27,6 +23,9 @@ func (cr *contractRepo) CreateContract(ctx context.Context, createContract *enti
 }
 
 func buildWhere(filter models.Filter, tx *gorm.DB) *gorm.DB {
+	if filter.ID != nil {
+		tx = tx.Where("id IN ?", filter.ID)
+	}
 	if filter.StudentCode != nil {
 		tx = tx.Where("student_code IN ?", filter.StudentCode)
 	}
@@ -34,13 +33,19 @@ func buildWhere(filter models.Filter, tx *gorm.DB) *gorm.DB {
 		tx = tx.Where("email IN ?", filter.Email)
 	}
 	if filter.FirstName != nil {
-		tx = tx.Where("first_name like ?", *filter.FirstName+"%")
+		for _, v := range filter.FirstName {
+			tx = tx.Where("first_name like ?", v+"%")
+		}
 	}
 	if filter.LastName != nil {
-		tx = tx.Where("last_name like ?", *filter.LastName+"%")
+		for _, v := range filter.LastName {
+			tx = tx.Where("last_name like ?", v+"%")
+		}
 	}
 	if filter.MiddleName != nil {
-		tx = tx.Where("middle_name like ?", *filter.MiddleName+"%")
+		for _, v := range filter.MiddleName {
+			tx = tx.Where("middle_name like ?", v+"%")
+		}
 	}
 	if filter.Phone != nil {
 		tx = tx.Where("phone IN ?", filter.Phone)
@@ -57,9 +62,6 @@ func buildWhere(filter models.Filter, tx *gorm.DB) *gorm.DB {
 	if filter.Gender != nil {
 		tx = tx.Where("gender IN ?", filter.Gender)
 	}
-	if filter.IsActive != nil {
-		tx = tx.Where("is_active = ?", *filter.IsActive)
-	}
 	if filter.NotificationChannels != nil {
 		tx = tx.Where("notification_channels IN ?", filter.NotificationChannels)
 	}
@@ -68,6 +70,9 @@ func buildWhere(filter models.Filter, tx *gorm.DB) *gorm.DB {
 	}
 	if filter.Avatar != nil {
 		tx = tx.Where("avatar IN ?", filter.Avatar)
+	}
+	if filter.IsActive != nil {
+		tx = tx.Where("is_active = ?", filter.IsActive)
 	}
 
 	return tx
@@ -80,10 +85,12 @@ func (cr *contractRepo) UpdateContract(ctx context.Context, filter models.Filter
 		// when updating with struct it will only update non-zero fields by default
 		err := tx.Debug().Model(&entity.Contract{}).Updates(*contract).WithContext(ctx).Error
 		if err != nil {
+
 			return GetError(err)
 		}
 		return nil
 	})
+
 }
 
 func (cr *contractRepo) DeleteContract(ctx context.Context, filter models.Filter) error {
@@ -103,11 +110,14 @@ func (cr *contractRepo) Search(ctx context.Context, filter models.Filter) ([]ent
 		tx = buildWhere(filter, tx)
 		return tx.Debug().Model(&entity.Contract{}).Find(&lst).Error
 	})
-	if len(lst) == 0 {
-		return lst, errorx.NewMyError(http.StatusNotFound, "Your contract does not exist", errors.New("contract not found"), time.Now())
-	}
 	if err != nil {
-		return lst, errorx.NewMyError(http.StatusInternalServerError, "Server error while searching contract", err, time.Now())
+		GetError(err)
 	}
-	return lst, nil
+	// if len(lst) == 0 {
+	// 	return lst, errorx.NewMyError(http.StatusNotFound, "Your contract does not exist", errors.New("contract not found"), time.Now())
+	// }
+	// if err != nil {
+	// 	return lst, errorx.NewMyError(http.StatusInternalServerError, "Server error while searching contract", err, time.Now())
+	// }
+	return lst, err
 }

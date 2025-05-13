@@ -33,13 +33,13 @@ func (cc *ContractController) CreateContract(ginContext *gin.Context) {
 	ctx, cancel := context.WithTimeout(ginContext.Request.Context(), 5*time.Second)
 	defer cancel()
 
-	var contract *model.Contract
+	var contract model.Contract
 	if err := ginContext.ShouldBindJSON(&contract); err != nil {
 		ginContext.Error(errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid request data", err, time.Now()))
 		return
 	}
 
-	if err := cc.serviceContract.CreateContract(ctx, contract); err != nil {
+	if err := cc.serviceContract.CreateContract(ctx, &contract); err != nil {
 		ginContext.Error(err)
 		return
 	}
@@ -58,7 +58,7 @@ func (cc *ContractController) UpdateContract(ginContext *gin.Context) {
 		return
 	}
 
-	var contract *model.Contract
+	var contract model.Contract
 	if err := ginContext.ShouldBindJSON(&contract); err != nil {
 		ginContext.Error(errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid request data", err, time.Now()))
 		return
@@ -67,7 +67,7 @@ func (cc *ContractController) UpdateContract(ginContext *gin.Context) {
 	ctx, cancel := context.WithTimeout(ginContext.Request.Context(), 5*time.Second)
 	defer cancel()
 
-	if err := cc.serviceContract.UpdateContract(ctx, filter, contract); err != nil {
+	if err := cc.serviceContract.UpdateContract(ctx, filter, &contract); err != nil {
 		// Error attaches an error to the current context.
 		ginContext.Error(err)
 		return
