@@ -13,7 +13,7 @@ import (
 // so if the record's length is < 255, we should declare the length is 255 to take the most of capacity of bit length
 // and if the record's length is > 255 and < 510 use the size 510 -> length = 2^n - 1
 type Contract struct {
-	ID                   uint       `gorm:"type:integer UNSIGNED; primaryKey"`
+	ID                   uint       `gorm:"type:integer UNSIGNED autoIncrement; primaryKey"`
 	StudentCode          string     `gorm:"type:char(10); index:idx_student_code"`
 	FirstName            string     `gorm:"type:varchar(255); index:idx_student_info, priority:1"`
 	LastName             string     `gorm:"type:varchar(255); index:idx_student_info, priority:2"`
@@ -27,6 +27,6 @@ type Contract struct {
 	Avatar               *string    `gorm:"type:varchar(1020)"` // Should store varchar(1020)
 	IsActive             *bool      `gorm:"type:boolean"`
 	RegistryAt           *time.Time `gorm:"type:timestamp; autoCreateTime;"`
-	RoomID               *string    `gorm:"type:char(5)"`
+	RoomID               *string    `gorm:"type:char(5); index: idx_room_id"`
 	NotificationChannels *uint      `gorm:"type:tinyint UNSIGNED;"`
 }

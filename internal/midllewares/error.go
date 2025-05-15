@@ -30,7 +30,8 @@ import (
 
 func ErrorHander() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// allow request run to controller
+		// allow request run to controller.
+		// it executes the pending handlers in the chain inside the calling handler.
 		c.Next()
 		for _, err := range c.Errors {
 			switch e := err.Err.(type) {

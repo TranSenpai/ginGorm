@@ -5,7 +5,7 @@ import (
 	model "main/internal/models"
 )
 
-func ToEntity(contractModel *model.Contract) *entity.Contract {
+func ToEntity(contractModel *model.Contract) (*entity.Contract, error) {
 	var contractEntity entity.Contract
 	if contractModel.StudentCode != nil {
 		contractEntity.StudentCode = *contractModel.StudentCode
@@ -46,8 +46,15 @@ func ToEntity(contractModel *model.Contract) *entity.Contract {
 	if contractModel.NotificationChannels != nil {
 		contractEntity.NotificationChannels = contractModel.NotificationChannels
 	}
+	if contractEntity.Avatar != nil {
+		avatarString, err := DecodeAvatar(*contractEntity.Avatar)
+		if err != nil {
+			return nil, err
+		}
+		contractEntity.Avatar = avatarString
+	}
 
-	return &contractEntity
+	return &contractEntity, nil
 }
 
 func ToContract(contractEntity *entity.Contract) *model.Contract {
@@ -73,14 +80,14 @@ func ToContract(contractEntity *entity.Contract) *model.Contract {
 	if contractEntity.NotificationChannels != nil {
 		contractModel.NotificationChannels = contractEntity.NotificationChannels
 	}
-	*contractModel.ID = contractEntity.ID
-	*contractModel.FirstName = contractEntity.FirstName
-	*contractModel.LastName = contractEntity.LastName
-	*contractModel.StudentCode = contractEntity.StudentCode
-	*contractModel.Email = contractEntity.Email
-	*contractModel.Sign = contractEntity.Sign
-	*contractModel.Phone = contractEntity.Phone
-	*contractModel.IsActive = *contractEntity.IsActive
+	contractModel.ID = &contractEntity.ID
+	contractModel.FirstName = &contractEntity.FirstName
+	contractModel.LastName = &contractEntity.LastName
+	contractModel.StudentCode = &contractEntity.StudentCode
+	contractModel.Email = &contractEntity.Email
+	contractModel.Sign = &contractEntity.Sign
+	contractModel.Phone = &contractEntity.Phone
+	contractModel.IsActive = contractEntity.IsActive
 
 	return &contractModel
 }

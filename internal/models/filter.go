@@ -3,11 +3,11 @@ package models
 import "time"
 
 type Filter struct {
-	ID                   []uint
+	ID                   *uint
 	StudentCode          []string
-	FirstName            []string
-	LastName             []string
-	MiddleName           []string
+	FirstName            *string
+	LastName             *string
+	MiddleName           *string
 	Email                []string
 	Sign                 []string
 	Phone                []string

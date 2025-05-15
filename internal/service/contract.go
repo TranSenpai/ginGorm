@@ -4,11 +4,9 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
-	"main/internal/entity"
 	model "main/internal/models"
 	repo "main/internal/repo"
 	errorx "main/internal/utils/myerror"
-	"math/rand/v2"
 	"net/http"
 	"time"
 )
@@ -18,6 +16,7 @@ type IContractService interface {
 	UpdateContract(ctx context.Context, filter model.Filter, contract *model.Contract) error
 	DeleteContract(ctx context.Context, filter model.Filter) error
 	Search(ctx context.Context, filter model.Filter) ([]model.Contract, error)
+	GetTotalContractEachRoom(ctx context.Context) ([]model.TotalContracts, error)
 }
 
 type contractService struct {
@@ -48,7 +47,6 @@ func DecodeAvatar(avatar string) (*string, error) {
 }
 
 func (c *contractService) CreateContract(ctx context.Context, contract *model.Contract) error {
-	var contractEntity *entity.Contract
 	if contract == nil {
 		return errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid data format", errors.New("contract empty"), time.Now())
 	}
@@ -56,48 +54,38 @@ func (c *contractService) CreateContract(ctx context.Context, contract *model.Co
 	if err := CheckRequiredField(contract); err != nil {
 		return errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid data format", errors.New("contract empty"), time.Now())
 	}
-	contractEntity = ToEntity(contract)
 
-	if contract.Avatar != nil {
-		return errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid Avatar format", errors.New("avatar's format is not base64"), time.Now())
-	}
-
-	avatarString, err := DecodeAvatar(*contract.Avatar)
+	contractEntity, err := ToEntity(contract)
 	if err != nil {
-		return err
+		return errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid data format", errors.New("contract empty"), time.Now())
 	}
-	contractEntity.Avatar = avatarString
-
-	timeNow := time.Now()
-	contractEntity.ID = uint(rand.UintN(uint(timeNow.Nanosecond())))
 
 	return c.contractRepo.CreateContract(ctx, contractEntity)
 }
 
 func (c *contractService) UpdateContract(ctx context.Context, filter model.Filter, contract *model.Contract) error {
-	var contractEntity entity.Contract
 	if contract == nil {
-		return errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid Avatar format", errors.New("contract empty"), time.Now())
+		return errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid data format", errors.New("contract empty"), time.Now())
 	}
 
-	if contract.Avatar != nil {
-		return errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid Avatar format", errors.New("avatar's format is not base64"), time.Now())
+	if filter.ID == nil {
+		return errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid data format", errors.New("contract empty"), time.Now())
 	}
-	avatarString, err := DecodeAvatar(*contract.Avatar)
+
+	contractEntity, err := ToEntity(contract)
 	if err != nil {
-		return err
+		return errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid data format", errors.New("contract empty"), time.Now())
 	}
-	contractEntity.Avatar = avatarString
 
-	return c.contractRepo.UpdateContract(ctx, filter, &contractEntity)
+	return c.contractRepo.UpdateContract(ctx, filter, contractEntity)
 }
 
 func (c *contractService) DeleteContract(ctx context.Context, filter model.Filter) error {
 	return c.contractRepo.DeleteContract(ctx, filter)
 }
 
-func (s contractService) Search(ctx context.Context, filter model.Filter) ([]model.Contract, error) {
-	entities, err := s.contractRepo.Search(ctx, filter)
+func (c contractService) Search(ctx context.Context, filter model.Filter) ([]model.Contract, error) {
+	entities, err := c.contractRepo.Search(ctx, filter)
 
 	if err != nil {
 		return nil, err
@@ -109,4 +97,13 @@ func (s contractService) Search(ctx context.Context, filter model.Filter) ([]mod
 	}
 
 	return contracts, nil
+}
+
+func (c contractService) GetTotalContractEachRoom(ctx context.Context) ([]model.TotalContracts, error) {
+	totalContract, err := c.contractRepo.GetTotalContractEachRoom(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return totalContract, nil
 }

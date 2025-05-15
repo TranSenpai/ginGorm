@@ -13,4 +13,6 @@ func RegisterContract(server *gin.RouterGroup) {
 	api.DELETE("", contractController.Delete)
 	api.PUT("", contractController.UpdateContract)
 	api.GET("", contractController.Search)
+	api.GET("/rooms", contractController.Search)
+	api.GET("/total/rooms", contractController.SearchContractInRoom)
 }

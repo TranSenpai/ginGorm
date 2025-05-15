@@ -7,32 +7,37 @@ import (
 
 	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
+
 	"gorm.io/gorm"
 )
 
-// type struct DB
-var (
-	dbConn *gorm.DB
-)
-
-func getConnection() {
-	data, err := buildConnection()
-	if err != nil {
-		panic(err)
-	}
-	dbConn = data
+type IConnection interface {
+	GetConnection(dbConnection *gorm.DB)
 }
 
-func buildConnection() (*gorm.DB, error) {
+type MySQL struct{}
+
+func NewMySQL() *MySQL {
+	return &MySQL{}
+}
+
+func (m *MySQL) GetConnection(dbConnection *gorm.DB) (*gorm.DB, error) {
+	if dbConnection == nil {
+		return buildMySQLConnection()
+	}
+	return dbConnection, nil
+}
+
+func buildMySQLConnection() (*gorm.DB, error) {
 	if err := godotenv.Load(); err != nil {
 		log.Println("Warning: Cannot load .env file, fallback to OS environment")
 	}
 
-	username := os.Getenv("ROOT_USERNAME")
-	password := os.Getenv("ROOT_PASSWORD")
-	host := os.Getenv("DB_HOST")
-	port := os.Getenv("DB_PORT")
-	dbname := os.Getenv("DB_NAME")
+	username := os.Getenv("MySQL_ROOT_USERNAME")
+	password := os.Getenv("MySQL_ROOT_PASSWORD")
+	host := os.Getenv("MySQL_DB_HOST")
+	port := os.Getenv("MySQL_DB_PORT")
+	dbname := os.Getenv("MySQL_DB_NAME")
 
 	if username == "" || password == "" || host == "" || port == "" || dbname == "" {
 		return nil, fmt.Errorf("missing database configuration")

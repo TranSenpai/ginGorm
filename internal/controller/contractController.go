@@ -2,7 +2,7 @@ package controller
 
 import (
 	"context"
-	model "main/internal/models"
+	"main/internal/models"
 	"main/internal/service"
 	errorx "main/internal/utils/myerror"
 	"net/http"
@@ -33,7 +33,7 @@ func (cc *ContractController) CreateContract(ginContext *gin.Context) {
 	ctx, cancel := context.WithTimeout(ginContext.Request.Context(), 5*time.Second)
 	defer cancel()
 
-	var contract model.Contract
+	var contract models.Contract
 	if err := ginContext.ShouldBindJSON(&contract); err != nil {
 		ginContext.Error(errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid request data", err, time.Now()))
 		return
@@ -52,13 +52,13 @@ func (cc *ContractController) CreateContract(ginContext *gin.Context) {
 }
 
 func (cc *ContractController) UpdateContract(ginContext *gin.Context) {
-	var filter model.Filter
+	var filter models.Filter
 	if err := ginContext.ShouldBindQuery(&filter); err != nil {
 		ginContext.Error(errorx.NewMyError(http.StatusBadRequest, "Invalid query", err, time.Now()))
 		return
 	}
 
-	var contract model.Contract
+	var contract models.Contract
 	if err := ginContext.ShouldBindJSON(&contract); err != nil {
 		ginContext.Error(errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid request data", err, time.Now()))
 		return
@@ -81,7 +81,7 @@ func (cc *ContractController) UpdateContract(ginContext *gin.Context) {
 }
 
 func (cc *ContractController) Delete(ginContext *gin.Context) {
-	var filter model.Filter
+	var filter models.Filter
 	if err := ginContext.ShouldBindQuery(&filter); err != nil {
 		ginContext.Error(errorx.NewMyError(http.StatusBadRequest, "Invalid query parameter", err, time.Now()))
 		return
@@ -104,7 +104,7 @@ func (cc *ContractController) Search(ginContext *gin.Context) {
 	ctx, cancel := context.WithTimeout(ginContext.Request.Context(), 5*time.Second)
 	defer cancel()
 
-	var filter model.Filter
+	var filter models.Filter
 	// ShouldBindQuery Bind the query into a struct filter
 	if err := ginContext.ShouldBindQuery(&filter); err != nil {
 		// Attach an error to the current context
@@ -121,5 +121,20 @@ func (cc *ContractController) Search(ginContext *gin.Context) {
 	ginContext.JSON(http.StatusOK, gin.H{
 		"result": result,
 		"total":  len(result),
+	})
+}
+
+func (cc *ContractController) SearchContractInRoom(ginContext *gin.Context) {
+	ctx, cancel := context.WithTimeout(ginContext.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	result, err := cc.serviceContract.GetTotalContractEachRoom(ctx)
+	if err != nil {
+		ginContext.Error(err)
+		return
+	}
+
+	ginContext.JSON(http.StatusOK, gin.H{
+		"data": result,
 	})
 }

@@ -1,32 +1,30 @@
 package repo
 
 import (
-	"fmt"
 	"main/internal/entity"
 
 	"gorm.io/gorm"
 )
 
-func createContractTable(connection *gorm.DB) error {
+func migrateTable(connection *gorm.DB) error {
 	return connection.AutoMigrate(&entity.Contract{})
 }
 
-func createTableContract() {
-	err := createContractTable(dbConn)
+func createTableContract(dbConnection *gorm.DB) {
+	err := migrateTable(dbConnection)
 	if err != nil {
-		fmt.Println(err.Error())
-		return
+		panic(err)
 	}
 }
 
-func createPartitionContract() {
-	dbConn.Debug().Model(&entity.Contract{}).Exec(`
+func createPartitionContract(dbConnection *gorm.DB) {
+	dbConnection.Debug().Model(&entity.Contract{}).Exec(`
 	ALTER TABLE contracts
-  	ADD COLUMN registry_month integer unsinged GENERATED ALWAYS AS (MONTH(registry_at)) STORED`)
+  	ADD COLUMN registry_month integer unsigned GENERATED ALWAYS AS (MONTH(registry_at)) STORED`)
 
-	dbConn.Debug().Model(&entity.Contract{}).Exec(`
+	dbConnection.Debug().Model(&entity.Contract{}).Exec(`
 	ALTER TABLE contracts
-	PARTITION BY LIST COLUMNS (registry_month) (
+	PARTITION BY LIST COLUMNS (id, registry_month) (
 		PARTITION p01 VALUES IN (1),
 		PARTITION p02 VALUES IN (2),
 		PARTITION p03 VALUES IN (3),
