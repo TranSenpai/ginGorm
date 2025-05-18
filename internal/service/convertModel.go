@@ -2,60 +2,9 @@ package service
 
 import (
 	"main/internal/entity"
+
 	model "main/internal/models"
 )
-
-func ToEntity(contractModel *model.Contract) (*entity.Contract, error) {
-	var contractEntity entity.Contract
-	if contractModel.StudentCode != nil {
-		contractEntity.StudentCode = *contractModel.StudentCode
-	}
-	if contractModel.FirstName != nil {
-		contractEntity.FirstName = *contractModel.FirstName
-	}
-	if contractModel.LastName != nil {
-		contractEntity.LastName = *contractModel.LastName
-	}
-	if contractModel.Email != nil {
-		contractEntity.Email = *contractModel.Email
-	}
-	if contractModel.Sign != nil {
-		contractEntity.Sign = *contractModel.Sign
-	}
-	if contractModel.Phone != nil {
-		contractEntity.Phone = *contractModel.Phone
-	}
-	if contractModel.IsActive != nil {
-		contractEntity.IsActive = contractModel.IsActive
-	}
-	if contractModel.MiddleName != nil {
-		contractEntity.MiddleName = contractModel.MiddleName
-	}
-	if contractModel.Gender != nil {
-		contractEntity.Gender = contractModel.Gender
-	}
-	if contractModel.Address != nil {
-		contractEntity.Address = contractModel.Address
-	}
-	if contractModel.DOB != nil {
-		contractEntity.DOB = contractModel.DOB
-	}
-	if contractModel.RoomID != nil {
-		contractEntity.RoomID = contractModel.RoomID
-	}
-	if contractModel.NotificationChannels != nil {
-		contractEntity.NotificationChannels = contractModel.NotificationChannels
-	}
-	if contractEntity.Avatar != nil {
-		avatarString, err := DecodeAvatar(*contractEntity.Avatar)
-		if err != nil {
-			return nil, err
-		}
-		contractEntity.Avatar = avatarString
-	}
-
-	return &contractEntity, nil
-}
 
 func ToContract(contractEntity *entity.Contract) *model.Contract {
 	var contractModel model.Contract
@@ -87,7 +36,70 @@ func ToContract(contractEntity *entity.Contract) *model.Contract {
 	contractModel.Email = &contractEntity.Email
 	contractModel.Sign = &contractEntity.Sign
 	contractModel.Phone = &contractEntity.Phone
-	contractModel.IsActive = contractEntity.IsActive
+	contractModel.IsActive = &contractEntity.IsActive
 
 	return &contractModel
+}
+
+func (c *contractService) MapField(contract *model.Contract) (map[string]any, error) {
+	mapField := make(map[string]any)
+
+	if contract.MiddleName != nil {
+		mapField["MiddleName"] = contract.MiddleName
+	}
+	if contract.Gender != nil {
+		mapField["Gender"] = contract.Gender
+	}
+	if contract.Avatar != nil {
+		avatarString, err := DecodeBase64(*contract.Avatar)
+		if err != nil {
+			return nil, err
+		}
+		mapField["Avatar"] = avatarString
+	}
+	if contract.Address != nil {
+		mapField["Address"] = contract.Address
+	}
+	if contract.DOB != nil {
+		mapField["DOB"] = contract.DOB
+	}
+	if contract.RoomID != nil {
+		mapField["RoomID"] = contract.RoomID
+	}
+	if contract.NotificationChannels != nil {
+		mapField["NotificationChannels"] = contract.NotificationChannels
+	}
+	if contract.ID != nil {
+		mapField["ID"] = contract.ID
+	}
+
+	if contract.FirstName != nil {
+		mapField["FirstName"] = contract.FirstName
+	}
+
+	if contract.LastName != nil {
+		mapField["LastName"] = contract.LastName
+	}
+
+	if contract.StudentCode != nil {
+		mapField["StudentCode"] = contract.StudentCode
+	}
+
+	if contract.Email != nil {
+		mapField["Email"] = contract.Email
+	}
+
+	if contract.Sign != nil {
+		mapField["Sign"] = contract.Sign
+	}
+
+	if contract.Phone != nil {
+		mapField["Phone"] = contract.Phone
+	}
+
+	if contract.IsActive != nil {
+		mapField["IsActive"] = contract.IsActive
+	}
+
+	return mapField, nil
 }

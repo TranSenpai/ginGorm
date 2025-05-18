@@ -25,7 +25,7 @@ type Contract struct {
 	DOB                  *time.Time `gorm:"type:date; index:idx_student_info, priority:4"`
 	Address              *string    `gorm:"type:varchar(255)"`
 	Avatar               *string    `gorm:"type:varchar(1020)"` // Should store varchar(1020)
-	IsActive             *bool      `gorm:"type:boolean"`
+	IsActive             bool       `gorm:"type:boolean"`
 	RegistryAt           *time.Time `gorm:"type:timestamp; autoCreateTime;"`
 	RoomID               *string    `gorm:"type:char(5); index: idx_room_id"`
 	NotificationChannels *uint      `gorm:"type:tinyint UNSIGNED;"`

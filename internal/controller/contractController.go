@@ -2,10 +2,12 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"main/internal/models"
 	"main/internal/service"
 	errorx "main/internal/utils/myerror"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -29,17 +31,49 @@ func NewContractController() *ContractController {
 // 	the modification when pass around handler
 // 	it also make sure don't copy so much data when pass by value
 
-func (cc *ContractController) CreateContract(ginContext *gin.Context) {
-	ctx, cancel := context.WithTimeout(ginContext.Request.Context(), 5*time.Second)
-	defer cancel()
+func (cc *ContractController) GetParamContractID(ginContext *gin.Context) (*uint, error) {
+	paramID := ginContext.Param("id")
+	if paramID == "" {
+		return nil, errorx.NewMyError(http.StatusUnprocessableEntity, "Missing ID", errors.New("missing ID"), time.Now())
+	}
 
+	id, err := strconv.Atoi(paramID)
+	if err != nil {
+		return nil, errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid ID type", errors.New("invalid ID type"), time.Now())
+	}
+	uid := uint(id)
+
+	return &uid, nil
+}
+
+func (cc *ContractController) BindToContract(ginContext *gin.Context) (*models.Contract, error) {
+	if ginContext == nil {
+		return &models.Contract{}, errorx.NewMyError(http.StatusUnprocessableEntity, "Pass context fail", errors.New("can not pass context"), time.Now())
+	}
 	var contract models.Contract
 	if err := ginContext.ShouldBindJSON(&contract); err != nil {
-		ginContext.Error(errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid request data", err, time.Now()))
+		return &models.Contract{}, errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid request data", err, time.Now())
+	}
+
+	return &contract, nil
+}
+
+func (cc *ContractController) CreateContract(ginContext *gin.Context) {
+	if ginContext == nil {
+		ginContext.Error(errorx.NewMyError(http.StatusUnprocessableEntity, "Pass context fail", errors.New("can not pass context"), time.Now()))
 		return
 	}
 
-	if err := cc.serviceContract.CreateContract(ctx, &contract); err != nil {
+	ctx, cancel := context.WithTimeout(ginContext.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	contract, err := cc.BindToContract(ginContext)
+	if err != nil {
+		ginContext.Error(err)
+		return
+	}
+
+	if err := cc.serviceContract.CreateContract(ctx, contract); err != nil {
 		ginContext.Error(err)
 		return
 	}
@@ -52,22 +86,27 @@ func (cc *ContractController) CreateContract(ginContext *gin.Context) {
 }
 
 func (cc *ContractController) UpdateContract(ginContext *gin.Context) {
-	var filter models.Filter
-	if err := ginContext.ShouldBindQuery(&filter); err != nil {
-		ginContext.Error(errorx.NewMyError(http.StatusBadRequest, "Invalid query", err, time.Now()))
-		return
-	}
-
-	var contract models.Contract
-	if err := ginContext.ShouldBindJSON(&contract); err != nil {
-		ginContext.Error(errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid request data", err, time.Now()))
+	if ginContext == nil {
+		ginContext.Error(errorx.NewMyError(http.StatusUnprocessableEntity, "Pass context fail", errors.New("can not pass context"), time.Now()))
 		return
 	}
 
 	ctx, cancel := context.WithTimeout(ginContext.Request.Context(), 5*time.Second)
 	defer cancel()
 
-	if err := cc.serviceContract.UpdateContract(ctx, filter, &contract); err != nil {
+	contract, err := cc.BindToContract(ginContext)
+	if err != nil {
+		ginContext.Error(err)
+		return
+	}
+
+	contractID, err := cc.GetParamContractID(ginContext)
+	if err != nil {
+		ginContext.Error(err)
+		return
+	}
+
+	if err := cc.serviceContract.UpdateContract(ctx, *contractID, contract); err != nil {
 		// Error attaches an error to the current context.
 		ginContext.Error(err)
 		return
@@ -81,6 +120,11 @@ func (cc *ContractController) UpdateContract(ginContext *gin.Context) {
 }
 
 func (cc *ContractController) Delete(ginContext *gin.Context) {
+	if ginContext == nil {
+		ginContext.Error(errorx.NewMyError(http.StatusUnprocessableEntity, "Pass context fail", errors.New("can not pass context"), time.Now()))
+		return
+	}
+
 	var filter models.Filter
 	if err := ginContext.ShouldBindQuery(&filter); err != nil {
 		ginContext.Error(errorx.NewMyError(http.StatusBadRequest, "Invalid query parameter", err, time.Now()))
@@ -101,6 +145,11 @@ func (cc *ContractController) Delete(ginContext *gin.Context) {
 }
 
 func (cc *ContractController) Search(ginContext *gin.Context) {
+	if ginContext == nil {
+		ginContext.Error(errorx.NewMyError(http.StatusUnprocessableEntity, "Pass context fail", errors.New("can not pass context"), time.Now()))
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(ginContext.Request.Context(), 5*time.Second)
 	defer cancel()
 
@@ -125,6 +174,11 @@ func (cc *ContractController) Search(ginContext *gin.Context) {
 }
 
 func (cc *ContractController) SearchContractInRoom(ginContext *gin.Context) {
+	if ginContext == nil {
+		ginContext.Error(errorx.NewMyError(http.StatusUnprocessableEntity, "Pass context fail", errors.New("can not pass context"), time.Now()))
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(ginContext.Request.Context(), 5*time.Second)
 	defer cancel()
 
@@ -136,5 +190,34 @@ func (cc *ContractController) SearchContractInRoom(ginContext *gin.Context) {
 
 	ginContext.JSON(http.StatusOK, gin.H{
 		"data": result,
+	})
+}
+
+func (cc *ContractController) Sign(ginContext *gin.Context) {
+	if ginContext == nil {
+		ginContext.Error(errorx.NewMyError(http.StatusUnprocessableEntity, "Pass context fail", errors.New("can not pass context"), time.Now()))
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ginContext.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	var filter models.Filter
+	var err error
+	filter.ID, err = cc.GetParamContractID(ginContext)
+	if err != nil {
+		ginContext.Error(err)
+		return
+	}
+	signature := ginContext.Param("signature")
+
+	err = cc.serviceContract.SignContract(ctx, filter, signature)
+	if err != nil {
+		ginContext.Error(err)
+		return
+	}
+
+	ginContext.JSON(http.StatusOK, gin.H{
+		"message": "Sign sucessfully",
 	})
 }

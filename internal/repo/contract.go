@@ -5,15 +5,19 @@ import (
 	"errors"
 	"main/internal/entity"
 	"main/internal/models"
+	errorx "main/internal/utils/myerror"
+	"net/http"
+	"time"
 
 	"gorm.io/gorm"
 )
 
 type IContractRepo interface {
-	CreateContract(ctx context.Context, contract *entity.Contract) error
-	UpdateContract(ctx context.Context, filter models.Filter, contract *entity.Contract) error
+	CreateContract(ctx context.Context, contract map[string]any) error
+	UpdateContract(ctx context.Context, contractID uint, mapField map[string]any) error
 	DeleteContract(ctx context.Context, filter models.Filter) error
 	Search(ctx context.Context, filter models.Filter) ([]entity.Contract, error)
+	GetTotalContractRoom(ctx context.Context, roomID string) (models.TotalContracts, error)
 	GetTotalContractEachRoom(ctx context.Context) ([]models.TotalContracts, error)
 }
 
@@ -24,7 +28,7 @@ func GetInstanceContract() IContractRepo {
 		ContractRepo = &contractRepo{db: dbConnection}
 	}
 	if ContractRepo.db == nil {
-		panic(errors.New("errorrrr"))
+		panic(errors.New("error"))
 	}
 	return ContractRepo
 }
@@ -33,9 +37,13 @@ type contractRepo struct {
 	db *gorm.DB
 }
 
-func (cr *contractRepo) CreateContract(ctx context.Context, createContract *entity.Contract) error {
+func (cr *contractRepo) CreateContract(ctx context.Context, createContract map[string]any) error {
+	if createContract == nil {
+		return errorx.NewMyError(http.StatusUnprocessableEntity, "Nil contract", errors.New("nil contract"), time.Now())
+	}
 	return cr.db.Transaction(func(tx *gorm.DB) error {
-		err := tx.Debug().Create(createContract).WithContext(ctx).Error
+
+		err := tx.Debug().Model(&entity.Contract{}).Create(createContract).WithContext(ctx).Error
 		if err != nil {
 			return GetError(err)
 		}
@@ -43,7 +51,7 @@ func (cr *contractRepo) CreateContract(ctx context.Context, createContract *enti
 	})
 }
 
-func (cr *contractRepo) buildWhere(filter models.Filter, tx *gorm.DB) *gorm.DB {
+func (cr contractRepo) buildWhere(filter models.Filter, tx *gorm.DB) *gorm.DB {
 	if filter.ID != nil {
 		tx = tx.Where("id = ?", filter.ID)
 	}
@@ -54,10 +62,10 @@ func (cr *contractRepo) buildWhere(filter models.Filter, tx *gorm.DB) *gorm.DB {
 		tx = tx.Where("email IN ?", filter.Email)
 	}
 	if filter.FirstName != nil {
-		tx = tx.Where("first_name like ?", *filter.FirstName+"%")
+		tx = tx.Where("first_name like ?", *filter.FirstName)
 	}
 	if filter.LastName != nil {
-		tx = tx.Where("last_name like ?", *filter.LastName+"%")
+		tx = tx.Where("last_name like ?", *filter.LastName)
 	}
 	if filter.MiddleName != nil {
 		tx = tx.Where("middle_name like ?", *filter.MiddleName+"%")
@@ -93,12 +101,11 @@ func (cr *contractRepo) buildWhere(filter models.Filter, tx *gorm.DB) *gorm.DB {
 	return tx
 }
 
-func (cr *contractRepo) UpdateContract(ctx context.Context, filter models.Filter, contract *entity.Contract) error {
+func (cr *contractRepo) UpdateContract(ctx context.Context, contractID uint, updateContract map[string]any) error {
 	return cr.db.Transaction(func(tx *gorm.DB) error {
-		tx = cr.buildWhere(filter, tx)
 		// Updates supports updating with struct or map[string]interface{},
 		// when updating with struct it will only update non-zero fields by default
-		err := tx.Debug().Model(&entity.Contract{}).Updates(*contract).WithContext(ctx).Error
+		err := tx.Debug().Model(&entity.Contract{}).Where("id = ?", contractID).Updates(updateContract).WithContext(ctx).Error
 		if err != nil {
 			return GetError(err)
 		}
@@ -117,7 +124,7 @@ func (cr *contractRepo) DeleteContract(ctx context.Context, filter models.Filter
 	})
 }
 
-func (cr *contractRepo) Search(ctx context.Context, filter models.Filter) ([]entity.Contract, error) {
+func (cr contractRepo) Search(ctx context.Context, filter models.Filter) ([]entity.Contract, error) {
 	var lst []entity.Contract
 	cr.db = cr.buildWhere(filter, cr.db)
 	err := cr.db.Debug().Model(&entity.Contract{}).Find(&lst).Error
@@ -128,7 +135,19 @@ func (cr *contractRepo) Search(ctx context.Context, filter models.Filter) ([]ent
 	return lst, err
 }
 
-func (cr *contractRepo) GetTotalContractEachRoom(ctx context.Context) ([]models.TotalContracts, error) {
+func (cr contractRepo) GetTotalContractRoom(ctx context.Context, roomID string) (models.TotalContracts, error) {
+	var result models.TotalContracts
+	err := cr.db.Debug().Model(&entity.Contract{}).
+		Select("COUNT(id) as total, room_id").Where("is_active = ? and room_id = ?", true, roomID).
+		Group("room_id").Having("total > ?", 4).Find(&result).Error
+	if err != nil {
+		GetError(err)
+	}
+
+	return result, err
+}
+
+func (cr contractRepo) GetTotalContractEachRoom(ctx context.Context) ([]models.TotalContracts, error) {
 	var result []models.TotalContracts
 	err := cr.db.Debug().Model(&entity.Contract{}).
 		Select("COUNT(id) as total, room_id").Where("is_active = ?", true).

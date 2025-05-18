@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
+	"main/internal/entity"
 	model "main/internal/models"
-	repo "main/internal/repo"
+	"main/internal/repo"
+
 	errorx "main/internal/utils/myerror"
 	"net/http"
 	"time"
@@ -13,10 +15,11 @@ import (
 
 type IContractService interface {
 	CreateContract(ctx context.Context, contract *model.Contract) error
-	UpdateContract(ctx context.Context, filter model.Filter, contract *model.Contract) error
+	UpdateContract(ctx context.Context, contractID uint, contract *model.Contract) error
 	DeleteContract(ctx context.Context, filter model.Filter) error
 	Search(ctx context.Context, filter model.Filter) ([]model.Contract, error)
 	GetTotalContractEachRoom(ctx context.Context) ([]model.TotalContracts, error)
+	SignContract(ctx context.Context, filter model.Filter, signature string) error
 }
 
 type contractService struct {
@@ -36,14 +39,14 @@ func (c *contractService) GetContractService() IContractService {
 	return ContractService
 }
 
-func DecodeAvatar(avatar string) (*string, error) {
-	decodedAvatar, err := base64.StdEncoding.DecodeString(avatar)
+func DecodeBase64(input string) (*string, error) {
+	decoded, err := base64.StdEncoding.DecodeString(input)
 	if err != nil {
 		return nil, errorx.NewMyError(http.StatusInternalServerError, "Can not parse avatar", err, time.Now())
 	}
-	avatarString := string(decodedAvatar)
+	result := string(decoded)
 
-	return &avatarString, nil
+	return &result, nil
 }
 
 func (c *contractService) CreateContract(ctx context.Context, contract *model.Contract) error {
@@ -51,40 +54,38 @@ func (c *contractService) CreateContract(ctx context.Context, contract *model.Co
 		return errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid data format", errors.New("contract empty"), time.Now())
 	}
 
-	if err := CheckRequiredField(contract); err != nil {
-		return errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid data format", errors.New("contract empty"), time.Now())
+	if err := c.CheckRequiredField(ctx, contract); err != nil {
+		return err
 	}
 
-	contractEntity, err := ToEntity(contract)
+	mapField, err := c.MapField(contract)
 	if err != nil {
-		return errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid data format", errors.New("contract empty"), time.Now())
+		return err
 	}
+	mapField["IsActive"] = false
+	mapField["Sign"] = ""
 
-	return c.contractRepo.CreateContract(ctx, contractEntity)
+	return c.contractRepo.CreateContract(ctx, mapField)
 }
 
-func (c *contractService) UpdateContract(ctx context.Context, filter model.Filter, contract *model.Contract) error {
+func (c *contractService) UpdateContract(ctx context.Context, contractID uint, contract *model.Contract) error {
 	if contract == nil {
-		return errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid data format", errors.New("contract empty"), time.Now())
+		return errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid data format", errors.New("nil contract"), time.Now())
 	}
 
-	if filter.ID == nil {
-		return errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid data format", errors.New("contract empty"), time.Now())
-	}
-
-	contractEntity, err := ToEntity(contract)
+	mapField, err := c.MapField(contract)
 	if err != nil {
-		return errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid data format", errors.New("contract empty"), time.Now())
+		return err
 	}
 
-	return c.contractRepo.UpdateContract(ctx, filter, contractEntity)
+	return c.contractRepo.UpdateContract(ctx, contractID, mapField)
 }
 
 func (c *contractService) DeleteContract(ctx context.Context, filter model.Filter) error {
 	return c.contractRepo.DeleteContract(ctx, filter)
 }
 
-func (c contractService) Search(ctx context.Context, filter model.Filter) ([]model.Contract, error) {
+func (c *contractService) Search(ctx context.Context, filter model.Filter) ([]model.Contract, error) {
 	entities, err := c.contractRepo.Search(ctx, filter)
 
 	if err != nil {
@@ -99,11 +100,58 @@ func (c contractService) Search(ctx context.Context, filter model.Filter) ([]mod
 	return contracts, nil
 }
 
-func (c contractService) GetTotalContractEachRoom(ctx context.Context) ([]model.TotalContracts, error) {
+func (c *contractService) GetTotalContractEachRoom(ctx context.Context) ([]model.TotalContracts, error) {
 	totalContract, err := c.contractRepo.GetTotalContractEachRoom(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	return totalContract, nil
+}
+
+func (c *contractService) ValidateSignContract(ctx context.Context, contract *entity.Contract, signature string) error {
+	if contract == nil {
+		return errorx.NewMyError(http.StatusUnprocessableEntity, "Invalid data format", errors.New("nil contract"), time.Now())
+	}
+
+	if contract.IsActive {
+		return errorx.NewMyError(http.StatusUnprocessableEntity, "Contract is active", errors.New("contract is active"), time.Now())
+	}
+
+	if contract.Sign != "" {
+		return errorx.NewMyError(http.StatusUnprocessableEntity, "Contract is active", errors.New("contract is active"), time.Now())
+	}
+
+	contract.IsActive = true
+	contract.Sign = signature
+
+	return nil
+}
+
+func (c *contractService) SignContract(ctx context.Context, filter model.Filter, signature string) error {
+	contractEntities, err := c.contractRepo.Search(ctx, filter)
+	if err != nil {
+		return err
+	}
+	if len(contractEntities) == 0 {
+		return errorx.NewMyError(http.StatusNotFound, "Contract not found", errors.New("contract not found"), time.Now())
+	}
+
+	contractEntity := contractEntities[0]
+	err = c.ValidateSignContract(ctx, &contractEntity, signature)
+	if err != nil {
+		return err
+	}
+	contract := ToContract(&contractEntity)
+	mapField, err := c.MapField(contract)
+	if err != nil {
+		return err
+	}
+
+	err = c.contractRepo.UpdateContract(ctx, contractEntity.ID, mapField)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
